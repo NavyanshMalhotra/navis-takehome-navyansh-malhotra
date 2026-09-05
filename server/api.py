@@ -103,16 +103,23 @@ class ResolveClarificationRequest(BaseModel):
 # Routes
 @app.get("/api/pipeline/status")
 def get_pipeline_status():
+    total_mv = sum(h.market_value_usd for h in state.bundle.households if h.market_value_usd is not None) if state.bundle else 0.0
+    active_aum = sum(h.active_aum_usd for h in state.bundle.households if h.active_aum_usd is not None) if state.bundle else 0.0
     return {
         "status": "idle" if not state.is_running else "running",
         "total_households": len(state.bundle.households) if state.bundle else 0,
         "total_clients": len(state.bundle.clients) if state.bundle else 0,
         "total_accounts": len(state.bundle.accounts) if state.bundle else 0,
+        "total_advisors": len(state.bundle.advisors) if state.bundle else 0,
+        "total_interactions": len(state.bundle.interactions) if state.bundle else 0,
         "total_clarifications": len([c for c in state.clarifications if c.id not in state.resolved_items]),
         "total_resolved": len(state.resolved_items),
-        "total_aum_usd": sum(h.market_value_usd for h in state.bundle.households if h.market_value_usd) if state.bundle else 0,
+        "total_market_value_usd": total_mv,
+        "active_aum_usd": active_aum,
+        "total_aum_usd": active_aum,  # backwards compatibility
         "audit_passed": state.audit_report.is_valid if state.audit_report else False
     }
+
 
 @app.post("/api/pipeline/run")
 def trigger_pipeline(background_tasks: BackgroundTasks):

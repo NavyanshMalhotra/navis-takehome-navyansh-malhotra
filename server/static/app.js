@@ -1,5 +1,5 @@
 // ==============================================================================
-// Nevis Agentic Onboarding Platform — Dashboard Client Application
+// Nevis Canonical Data Platform — Tufte Analytical Client
 // ==============================================================================
 
 let currentTab = 'canonical';
@@ -10,33 +10,34 @@ let advisorsList = [];
 let searchQuery = '';
 
 document.addEventListener('DOMContentLoaded', () => {
-  initDashboard();
+  initPlatform();
 });
 
-async function initDashboard() {
-  await fetchStatus();
-  await fetchCanonicalData();
-  await fetchClarifications();
-  await fetchRules();
-  await fetchAuditReport();
-  await fetchSlackMessage();
+async function initPlatform() {
+  await Promise.all([
+    fetchStatus(),
+    fetchCanonicalData(),
+    fetchClarifications(),
+    fetchAuditReport(),
+    fetchSlackMessage()
+  ]);
 }
 
 // ------------------------------------------------------------------------------
-// Navigation & Tab Switching
+// Navigation & Views
 // ------------------------------------------------------------------------------
 function switchTab(tabId) {
   currentTab = tabId;
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  document.querySelectorAll('.view-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
 
-  const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => 
-    b.getAttribute('onclick').includes(tabId)
+  const clickedBtn = Array.from(document.querySelectorAll('.view-tab')).find(b =>
+    b.getAttribute('onclick')?.includes(tabId)
   );
-  if (activeBtn) activeBtn.classList.add('active');
+  if (clickedBtn) clickedBtn.classList.add('active');
 
-  const contentEl = document.getElementById(`tab-${tabId}`);
-  if (contentEl) contentEl.classList.add('active');
+  const pane = document.getElementById(`view-${tabId}`);
+  if (pane) pane.classList.add('active');
 
   if (tabId === 'slack') {
     fetchSlackMessage();
@@ -45,35 +46,59 @@ function switchTab(tabId) {
 
 function filterEntityType(entityType) {
   currentEntity = entityType;
-  document.querySelectorAll('.sub-filter-btn').forEach(btn => btn.classList.remove('active'));
-  const activeBtn = Array.from(document.querySelectorAll('.sub-filter-btn')).find(b => 
-    b.getAttribute('onclick').includes(entityType)
+  document.querySelectorAll('.entity-btn').forEach(b => b.classList.remove('active'));
+  const clickedBtn = Array.from(document.querySelectorAll('.entity-btn')).find(b =>
+    b.getAttribute('onclick')?.includes(entityType)
   );
-  if (activeBtn) activeBtn.classList.add('active');
+  if (clickedBtn) clickedBtn.classList.add('active');
   renderCanonicalTable();
 }
 
 function handleCanonicalSearch() {
-  searchQuery = document.getElementById('canonicalSearch').value.toLowerCase();
+  searchQuery = document.getElementById('canonicalSearch').value.toLowerCase().trim();
   renderCanonicalTable();
 }
 
 // ------------------------------------------------------------------------------
-// API Data Fetchers
+// API Fetchers
 // ------------------------------------------------------------------------------
 async function fetchStatus() {
   try {
     const res = await fetch('/api/pipeline/status');
     const data = await res.json();
-    document.getElementById('kpiAum').textContent = `$${data.total_aum_usd.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-    document.getElementById('kpiHouseholds').textContent = data.total_households;
-    document.getElementById('kpiAccounts').textContent = data.total_accounts;
-    document.getElementById('kpiClients').textContent = data.total_clients;
-    document.getElementById('kpiClarif').textContent = data.total_clarifications;
-    document.getElementById('kpiClarifBadge').textContent = `${data.total_clarifications} ITEMS`;
-    document.getElementById('triageCounter').textContent = data.total_clarifications;
+    
+    const fmtUsd = (val) => '$' + Number(val || 0).toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+
+    const activeAumEl = document.getElementById('kpiActiveAum');
+    if (activeAumEl) activeAumEl.textContent = fmtUsd(data.active_aum_usd);
+
+    const totalMvEl = document.getElementById('kpiTotalMv');
+    if (totalMvEl) totalMvEl.textContent = fmtUsd(data.total_market_value_usd);
+
+    const hhEl = document.getElementById('kpiHouseholds');
+    if (hhEl) hhEl.textContent = data.total_households;
+
+    const accEl = document.getElementById('kpiAccounts');
+    if (accEl) accEl.textContent = data.total_accounts;
+
+    const cliEl = document.getElementById('kpiClients');
+    if (cliEl) cliEl.textContent = data.total_clients;
+
+    const clarifEl = document.getElementById('kpiClarif');
+    if (clarifEl) clarifEl.textContent = data.total_clarifications;
+
+    const badgeEl = document.getElementById('triageBadge');
+    if (badgeEl) badgeEl.textContent = data.total_clarifications;
+
+    const mastheadEl = document.getElementById('mastheadStatus');
+    if (mastheadEl) {
+      mastheadEl.textContent = data.audit_passed ? '8/8 Invariant Rules Passed' : 'Audit Exception Detected';
+    }
   } catch (err) {
-    console.error('Failed to fetch status:', err);
+    console.error('Failed to fetch system status:', err);
   }
 }
 
@@ -83,15 +108,20 @@ async function fetchCanonicalData() {
     canonicalData = await res.json();
     advisorsList = canonicalData.advisors || [];
 
-    document.getElementById('countHh').textContent = (canonicalData.households || []).length;
-    document.getElementById('countCli').textContent = (canonicalData.clients || []).length;
-    document.getElementById('countAcc').textContent = (canonicalData.accounts || []).length;
-    document.getElementById('countAdv').textContent = (canonicalData.advisors || []).length;
-    document.getElementById('countInt').textContent = (canonicalData.interactions || []).length;
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    setVal('countHh', (canonicalData.households || []).length);
+    setVal('countCli', (canonicalData.clients || []).length);
+    setVal('countAcc', (canonicalData.accounts || []).length);
+    setVal('countAdv', (canonicalData.advisors || []).length);
+    setVal('countInt', (canonicalData.interactions || []).length);
 
     renderCanonicalTable();
   } catch (err) {
-    console.error('Failed to fetch canonical book:', err);
+    console.error('Failed to fetch canonical store:', err);
   }
 }
 
@@ -102,16 +132,6 @@ async function fetchClarifications() {
     renderTriageList();
   } catch (err) {
     console.error('Failed to fetch clarifications:', err);
-  }
-}
-
-async function fetchRules() {
-  try {
-    const res = await fetch('/api/rules');
-    const data = await res.json();
-    renderRulesGrid(data.rules || []);
-  } catch (err) {
-    console.error('Failed to fetch rules:', err);
   }
 }
 
@@ -129,7 +149,8 @@ async function fetchSlackMessage() {
   try {
     const res = await fetch('/api/export/slack');
     const text = await res.text();
-    document.getElementById('slackMarkdownContent').textContent = text;
+    const el = document.getElementById('slackMarkdownContent');
+    if (el) el.textContent = text;
   } catch (err) {
     console.error('Failed to fetch Slack markdown:', err);
   }
@@ -138,23 +159,18 @@ async function fetchSlackMessage() {
 async function triggerPipelineRun() {
   const btn = document.getElementById('runPipelineBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span>Executing Pipeline...</span>';
+  btn.textContent = 'Executing Pipeline...';
 
   try {
     const res = await fetch('/api/pipeline/run', { method: 'POST' });
     const data = await res.json();
     showToast(data.message || 'Pipeline executed successfully.');
-    await initDashboard();
+    await initPlatform();
   } catch (err) {
-    showToast('Pipeline execution error.');
+    showToast('Pipeline execution failed.');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `
-      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-      </svg>
-      <span>Execute Sync Pipeline</span>
-    `;
+    btn.textContent = 'Execute Sync Pipeline';
   }
 }
 
@@ -174,86 +190,94 @@ function renderCanonicalTable() {
   }
 
   if (items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#6b7280; padding:32px;">No matching records found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:32px;">No matching records found.</td></tr>`;
     return;
   }
+
+  const fmtUsd = (val) => val !== null && val !== undefined
+    ? '$' + Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : '<span style="color:var(--text-muted);">null</span>';
 
   if (currentEntity === 'households') {
     thead.innerHTML = `
       <tr>
-        <th>Household ID</th>
+        <th style="width: 140px;">Household ID</th>
         <th>Household Name</th>
-        <th>Primary Advisor</th>
-        <th>Status</th>
-        <th>Total AUM (USD)</th>
-        <th>Source Tags / Lineage</th>
+        <th style="width: 120px;">Primary Advisor</th>
+        <th style="width: 90px;">Status</th>
+        <th class="num-col" style="width: 150px;">Market Value (USD)</th>
+        <th class="num-col" style="width: 150px;">Active AUM (USD)</th>
+        <th>Source Tags</th>
       </tr>
     `;
     tbody.innerHTML = items.map(h => `
       <tr onclick="openProvenanceDrawer('Household', '${h.household_id}')">
         <td><code>${h.household_id}</code></td>
-        <td style="font-weight:600; color:#fff;">${h.household_name}</td>
-        <td><code>${h.primary_advisor_id || 'N/A'}</code></td>
-        <td><span class="badge badge-${(h.status || 'active').toLowerCase()}">${h.status}</span></td>
-        <td style="font-family:var(--font-mono); font-weight:600;">${h.market_value_usd !== null ? '$' + h.market_value_usd.toLocaleString(undefined, {minimumFractionDigits: 2}) : '<span style="color:#6b7280;">null (Rule 3)</span>'}</td>
-        <td>${(h.source_tags || []).slice(0, 3).map(t => `<span class="badge badge-tag">${t}</span>`).join('')}</td>
+        <td style="font-weight:600;">${h.household_name}</td>
+        <td><code>${h.primary_advisor_id || 'unassigned'}</code></td>
+        <td><span class="tag tag-${(h.status || 'active').toLowerCase()}">${h.status}</span></td>
+        <td class="num-col">${fmtUsd(h.market_value_usd)}</td>
+        <td class="num-col" style="font-weight:600; color:${h.is_active ? 'var(--text-primary)' : 'var(--ink-amber)'};">${fmtUsd(h.active_aum_usd)}</td>
+        <td>${(h.source_tags || []).map(t => `<span class="tag tag-meta">${t}</span>`).join('')}</td>
       </tr>
     `).join('');
   } else if (currentEntity === 'clients') {
     thead.innerHTML = `
       <tr>
-        <th>Client ID</th>
-        <th>Full Name</th>
-        <th>Household ID</th>
-        <th>Role</th>
+        <th style="width: 140px;">Client ID</th>
+        <th>Full Legal Name</th>
+        <th style="width: 140px;">Household ID</th>
+        <th style="width: 100px;">Role</th>
+        <th style="width: 100px;">Status</th>
         <th>Source Tags</th>
       </tr>
     `;
     tbody.innerHTML = items.map(c => `
       <tr onclick="openProvenanceDrawer('Client', '${c.client_id}')">
         <td><code>${c.client_id}</code></td>
-        <td style="font-weight:600; color:#fff;">${c.first_name} ${c.last_name}</td>
+        <td style="font-weight:600;">${c.first_name} ${c.last_name}</td>
         <td><code>${c.household_id}</code></td>
-        <td><span class="badge badge-tag">${c.role}</span></td>
-        <td>${(c.source_tags || []).slice(0, 3).map(t => `<span class="badge badge-tag">${t}</span>`).join('')}</td>
+        <td><span class="tag tag-meta">${c.role}</span></td>
+        <td><span class="tag tag-${(c.status || 'active').toLowerCase()}">${c.status}</span></td>
+        <td>${(c.source_tags || []).map(t => `<span class="tag tag-meta">${t}</span>`).join('')}</td>
       </tr>
     `).join('');
   } else if (currentEntity === 'accounts') {
     thead.innerHTML = `
       <tr>
-        <th>Account ID</th>
-        <th>Holder Name</th>
-        <th>Household ID</th>
-        <th>Type</th>
-        <th>Market Value (USD)</th>
-        <th>Original Currency</th>
-        <th>Custodian</th>
+        <th style="width: 140px;">Account ID</th>
+        <th>Account Title / Holder</th>
+        <th style="width: 140px;">Household ID</th>
+        <th style="width: 100px;">Type</th>
+        <th class="num-col" style="width: 150px;">Market Value (USD)</th>
+        <th style="width: 90px;">Currency</th>
+        <th style="width: 120px;">Custodian</th>
       </tr>
     `;
     tbody.innerHTML = items.map(a => `
       <tr onclick="openProvenanceDrawer('Account', '${a.account_id}')">
         <td><code>${a.account_id}</code></td>
-        <td style="font-weight:600; color:#fff;">${a.account_holder_raw}</td>
+        <td style="font-weight:600;">${a.account_holder_raw}</td>
         <td><code>${a.household_id}</code></td>
-        <td><span class="badge badge-tag">${a.account_type}</span></td>
-        <td style="font-family:var(--font-mono); font-weight:600; color:#34d399;">$${(a.market_value_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-        <td><code>${a.currency_original}</code> ${a.currency_original !== 'USD' ? '<span class="badge badge-prospect">Converted</span>' : ''}</td>
+        <td><span class="tag tag-meta">${a.account_type}</span></td>
+        <td class="num-col" style="font-weight:600;">${fmtUsd(a.market_value_usd)}</td>
+        <td><code>${a.currency_original}</code> ${a.currency_original !== 'USD' ? '<span class="tag tag-prospect">FX</span>' : ''}</td>
         <td>${a.custodian}</td>
       </tr>
     `).join('');
   } else if (currentEntity === 'advisors') {
     thead.innerHTML = `
       <tr>
-        <th>Advisor ID</th>
+        <th style="width: 140px;">Advisor ID</th>
         <th>Full Name</th>
-        <th>Role</th>
-        <th>Office</th>
+        <th style="width: 180px;">Role</th>
+        <th>Office Location</th>
       </tr>
     `;
     tbody.innerHTML = items.map(adv => `
       <tr onclick="openProvenanceDrawer('Advisor', '${adv.advisor_id}')">
         <td><code>${adv.advisor_id}</code></td>
-        <td style="font-weight:600; color:#fff;">${adv.full_name}</td>
+        <td style="font-weight:600;">${adv.full_name}</td>
         <td>${adv.role}</td>
         <td>${adv.office}</td>
       </tr>
@@ -261,22 +285,22 @@ function renderCanonicalTable() {
   } else if (currentEntity === 'interactions') {
     thead.innerHTML = `
       <tr>
-        <th>Interaction ID</th>
-        <th>Household ID</th>
-        <th>Type</th>
-        <th>Date</th>
-        <th>Advisor ID</th>
-        <th>Summary</th>
+        <th style="width: 140px;">Interaction ID</th>
+        <th style="width: 140px;">Household ID</th>
+        <th style="width: 100px;">Date</th>
+        <th style="width: 100px;">Type</th>
+        <th style="width: 120px;">Advisor</th>
+        <th>Summary / Context</th>
       </tr>
     `;
     tbody.innerHTML = items.map(i => `
       <tr onclick="openProvenanceDrawer('Interaction', '${i.interaction_id}')">
         <td><code>${i.interaction_id}</code></td>
         <td><code>${i.household_id}</code></td>
-        <td><span class="badge badge-tag">${i.interaction_type}</span></td>
         <td>${i.interaction_date}</td>
-        <td><code>${i.advisor_id || 'N/A'}</code></td>
-        <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${i.summary || 'N/A'}</td>
+        <td><span class="tag tag-meta">${i.interaction_type}</span></td>
+        <td><code>${i.advisor_id || 'unassigned'}</code></td>
+        <td>${i.summary || 'N/A'}</td>
       </tr>
     `).join('');
   }
@@ -288,62 +312,67 @@ function renderTriageList() {
 
   if (items.length === 0) {
     container.innerHTML = `
-      <div class="glassmorphism" style="padding:40px; text-align:center;">
-        <h4 style="color:#34d399; margin-bottom:8px;">All Clarifications Resolved!</h4>
-        <p style="color:#9ca3af; font-size:13px;">The client book has achieved 100% full canonical alignment with no outstanding flags.</p>
+      <div class="clarif-entry" style="text-align:center; padding:32px;">
+        <h3 style="color:var(--ink-green); margin-bottom:6px;">Clarification Queue Clear</h3>
+        <p style="color:var(--text-secondary); font-size:13px;">All 8 items have been reviewed and canonical invariants are 100% satisfied.</p>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = items.map((c, idx) => {
-    let catClass = 'cat-advisor';
-    if (c.category === 'ORPHAN_ACCOUNT') catClass = 'cat-account';
-    if (c.category === 'ORPHAN_INTERACTION') catClass = 'cat-interaction';
+  container.innerHTML = items.map((c) => {
+    let chipClass = 'chip-advisor';
+    if (c.category === 'ORPHAN_ACCOUNT') chipClass = 'chip-account';
+    if (c.category === 'ORPHAN_INTERACTION') chipClass = 'chip-interaction';
 
-    // Build interactive action controls
     let actionControls = '';
     if (c.category === 'UNASSIGNED_ADVISOR') {
       actionControls = `
-        <div style="display:flex; align-items:center; gap:12px;">
-          <label style="font-size:12px; color:#9ca3af;">Assign Advisor:</label>
-          <select id="advSelect_${c.id}" class="advisor-select">
+        <div class="clarif-controls">
+          <select id="advSelect_${c.id}" class="select-control">
             ${advisorsList.map(a => `<option value="${a.advisor_id}">${a.full_name} (${a.office})</option>`).join('')}
           </select>
-          <button class="btn btn-primary" onclick="submitAdvisorAssignment('${c.id}')">Approve Assignment</button>
+          <button class="btn btn-primary" onclick="submitAdvisorAssignment('${c.id}')">Assign Advisor</button>
         </div>
       `;
     } else {
       actionControls = `
-        <div style="display:flex; align-items:center; gap:12px;">
-          <button class="btn btn-primary" onclick="submitDefaultResolution('${c.id}')">Approve Proposed Default</button>
+        <div class="clarif-controls">
+          <button class="btn btn-primary" onclick="submitDefaultResolution('${c.id}')">Confirm Proposed Default</button>
         </div>
       `;
     }
 
+    const optionsText = Array.isArray(c.candidate_options)
+      ? c.candidate_options.join(' | ')
+      : (c.candidate_options || 'N/A');
+
     return `
-      <div class="clarif-card glassmorphism">
-        <div class="clarif-card-header">
-          <span class="clarif-category-tag ${catClass}">${c.category.replace('_', ' ')}</span>
-          <span style="font-size:12px; color:#9ca3af; font-family:var(--font-mono);">ID: ${c.id}</span>
+      <div class="clarif-entry">
+        <div class="clarif-topline">
+          <div class="clarif-title-group">
+            <span class="clarif-category-chip ${chipClass}">${c.category.replace(/_/g, ' ')}</span>
+            <span class="clarif-title-text">${c.title}</span>
+          </div>
+          <span class="clarif-id-label">Item ID: ${c.id}</span>
         </div>
-        <h4 class="clarif-title">${c.title}</h4>
-        <div class="clarif-body">
-          <div class="clarif-row">
-            <span class="clarif-label">Trigger:</span>
-            <span class="clarif-text">${c.trigger}</span>
-          </div>
-          <div class="clarif-row">
-            <span class="clarif-label">Evidence:</span>
-            <span class="clarif-text" style="color:#93c5fd;">${c.evidence}</span>
-          </div>
-          <div class="clarif-row">
-            <span class="clarif-label">Proposed Default:</span>
-            <span class="clarif-text" style="color:#34d399; font-weight:600;">${c.proposed_default}</span>
-          </div>
+
+        <div class="schema-grid">
+          <div class="schema-key">Trigger</div>
+          <div class="schema-val">${c.trigger}</div>
+
+          <div class="schema-key">Evidence</div>
+          <div class="schema-val"><span class="schema-val evidence">${c.evidence}</span></div>
+
+          <div class="schema-key">Candidate Options</div>
+          <div class="schema-val">${optionsText}</div>
+
+          <div class="schema-key">Proposed Default</div>
+          <div class="schema-val default">${c.proposed_default}</div>
         </div>
-        <div class="clarif-action-bar">
-          <span style="font-size:12px; color:#6b7280;">Confidence Score: <b>${c.confidence.toFixed(2)}</b> (Routing: Dana Ruiz)</span>
+
+        <div class="clarif-actions-strip">
+          <span class="clarif-meta-note">Target: Dana Ruiz (Head of Operations) &bull; Confidence: <b>${c.confidence.toFixed(2)}</b></span>
           ${actionControls}
         </div>
       </div>
@@ -361,14 +390,14 @@ async function submitAdvisorAssignment(itemId) {
       body: JSON.stringify({
         item_id: itemId,
         selected_advisor_id: advId,
-        notes: `Assigned advisor ${advId} via dashboard triage`
+        notes: `Assigned advisor ${advId} via Tufte HITL triage`
       })
     });
     const data = await res.json();
-    showToast(`Clarification ${itemId} resolved!`);
-    await initDashboard();
+    showToast(`Assigned ${advId} to ${itemId}`);
+    await initPlatform();
   } catch (err) {
-    showToast('Failed to resolve clarification.');
+    showToast('Failed to resolve advisor assignment.');
   }
 }
 
@@ -379,55 +408,38 @@ async function submitDefaultResolution(itemId) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         item_id: itemId,
-        notes: 'Approved proposed default via dashboard triage'
+        notes: 'Approved proposed default via Tufte HITL triage'
       })
     });
     const data = await res.json();
-    showToast(`Approved default for ${itemId}!`);
-    await initDashboard();
+    showToast(`Approved default for ${itemId}`);
+    await initPlatform();
   } catch (err) {
-    showToast('Failed to resolve clarification.');
+    showToast('Failed to confirm default.');
   }
 }
 
-function renderRulesGrid(rules) {
-  const container = document.getElementById('rulesGrid');
-  container.innerHTML = rules.map(r => `
-    <div class="rule-card glassmorphism">
-      <div class="rule-header">
-        <span class="rule-id">${r.rule_id}</span>
-        <span class="rule-scope">${r.scope}</span>
-      </div>
-      <p class="rule-desc">${r.description}</p>
-      <div class="rule-meta">
-        <div><b>Stakeholder:</b> ${r.stakeholder}</div>
-        <div><b>Source Citation:</b> <code>${r.source_reference}</code></div>
-      </div>
-    </div>
-  `).join('');
-}
-
 function renderAuditReport(audit) {
-  const list = document.getElementById('auditRulesList');
-  list.innerHTML = (audit.rule_results || []).map(r => `
-    <div class="audit-rule-item">
-      <div class="audit-icon ${r.passed ? 'pass' : 'fail'}">${r.passed ? '✓' : '✗'}</div>
-      <div>
-        <div class="audit-rule-title">${r.rule_name}</div>
-        <div class="audit-rule-detail">${r.details}</div>
-      </div>
-    </div>
+  const tbody = document.getElementById('auditRulesList');
+  if (!tbody) return;
+
+  tbody.innerHTML = (audit.rule_results || []).map(r => `
+    <tr>
+      <td><span class="audit-pass-icon">${r.passed ? '✓' : '✗'}</span></td>
+      <td><span class="audit-rule-code">${r.rule_id}</span></td>
+      <td style="font-weight:600;">${r.rule_name}</td>
+      <td style="color:var(--text-secondary);">${r.details}</td>
+    </tr>
   `).join('');
 }
 
 // ------------------------------------------------------------------------------
-// Slide-Out Provenance Drawer
+// Provenance Drawer
 // ------------------------------------------------------------------------------
 function openProvenanceDrawer(entityType, entityId) {
   const collectionKey = entityType.toLowerCase() + 's';
   const items = canonicalData[collectionKey] || [];
   
-  // Find entity by PK
   const pkField = `${entityType.toLowerCase()}_id`;
   const entity = items.find(item => item[pkField] === entityId);
   if (!entity) return;
@@ -439,25 +451,22 @@ function openProvenanceDrawer(entityType, entityId) {
   const provDict = entity._provenance || {};
 
   if (Object.keys(provDict).length === 0) {
-    body.innerHTML = `<p style="color:#9ca3af;">No detailed field provenance recorded for this entity.</p>`;
+    body.innerHTML = `<p style="color:var(--text-muted);">No field-level provenance recorded for this record.</p>`;
   } else {
     body.innerHTML = Object.entries(provDict).map(([fieldName, prov]) => {
       const conf = prov.confidence || 1.0;
-      let confClass = 'conf-high';
-      if (conf < 0.85) confClass = 'conf-mid';
-      if (conf < 0.50) confClass = 'conf-low';
-
       return `
-        <div class="prov-field-card">
-          <div class="prov-field-header">
-            <span class="prov-field-name">${fieldName}</span>
-            <span class="prov-confidence ${confClass}">Conf: ${conf.toFixed(2)}</span>
+        <div class="citation-card">
+          <div class="citation-head">
+            <span class="citation-field">${fieldName}</span>
+            <span class="citation-conf">Conf: ${conf.toFixed(2)}</span>
           </div>
-          <div class="prov-field-body">
-            <div><b>Source File:</b> <code>${prov.source_file.split('/').slice(-2).join('/')}</code> (${prov.source_location})</div>
-            <div><b>Method / Agent:</b> <span style="color:#6366f1;">${prov.method}</span> (${prov.rule_or_agent})</div>
-            <div><b>Raw Source Value:</b> <code style="color:#fcd34d;">${JSON.stringify(prov.source_raw_value)}</code></div>
-            ${prov.reasoning ? `<div style="margin-top:4px; font-style:italic; color:#93c5fd;">"${prov.reasoning}"</div>` : ''}
+          <div class="citation-details">
+            <div><b>Source File:</b> <code>${prov.source_file}</code></div>
+            <div><b>Source Location:</b> ${prov.source_location}</div>
+            <div><b>Method / Agent:</b> ${prov.method} &bull; ${prov.rule_or_agent}</div>
+            <div><b>Raw Value:</b> <code>${JSON.stringify(prov.source_raw_value)}</code></div>
+            ${prov.reasoning ? `<div class="citation-evidence-quote">${prov.reasoning}</div>` : ''}
           </div>
         </div>
       `;
@@ -474,19 +483,21 @@ function closeProvenanceDrawer() {
 }
 
 function copySlackMessage() {
-  const text = document.getElementById('slackMarkdownContent').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('Slack message copied to clipboard!');
+  const el = document.getElementById('slackMarkdownContent');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    showToast('Slack message copied to clipboard');
   }).catch(() => {
-    showToast('Failed to copy to clipboard.');
+    showToast('Clipboard copy failed');
   });
 }
 
 function showToast(message) {
   const toast = document.getElementById('toast');
+  if (!toast) return;
   toast.textContent = message;
   toast.classList.add('show');
   setTimeout(() => {
     toast.classList.remove('show');
-  }, 3000);
+  }, 2500);
 }
