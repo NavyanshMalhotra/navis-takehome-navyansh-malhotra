@@ -152,11 +152,13 @@ def read_notion_meetings(notion_dir: Path) -> List[Dict[str, Any]]:
             
             meeting_name = record.get("Name", "").strip()
             if page_folder and meeting_name:
-                # Match by meeting name
-                prefix = meeting_name.split("—")[0].strip()
-                matched = list(page_folder.glob(f"{glob.escape(prefix)}*.md"))
+                # Match by full meeting name first (e.g. "Intro Call — Fairbanks *.md")
+                matched = list(page_folder.glob(f"{glob.escape(meeting_name)}*.md"))
                 if not matched:
-                    matched = list(page_folder.glob(f"*{glob.escape(record.get('Client', ''))}*.md"))
+                    # Fallback to client name match
+                    client_name = record.get("Client", "").strip()
+                    if client_name:
+                        matched = list(page_folder.glob(f"*{glob.escape(client_name)}*.md"))
                 if matched:
                     page_path = matched[0]
                     try:
