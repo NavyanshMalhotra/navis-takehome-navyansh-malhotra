@@ -1,13 +1,21 @@
 """
 Knowledge Layer & Declarative Business Rules Engine.
-Encodes stakeholder operational knowledge (Dana Ruiz's Slack Round 1 answers)
-and reusable RIA onboarding rules.
-Supports dynamic rule injection when new clarification questions are resolved.
+Extracts operational business rules from stakeholder communications (Dana Ruiz's Slack Round 1)
+using Google Gemini, generates vector embeddings with text-embedding-004, persists them
+to SQLite, and provides both deterministic lookup and semantic similarity retrieval.
 """
 
+import json
+import logging
+from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional, Tuple, Callable
+from typing import Dict, List, Any, Optional, Tuple
 from config import config
+from pipeline.llm_client import llm_client
+from pipeline.agent_tools import knowledge_db
+
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class KnowledgeRule:
@@ -18,6 +26,7 @@ class KnowledgeRule:
     source_reference: str
     scope: str  # "CLIENT_SPECIFIC" | "CROSS_CLIENT_REUSABLE"
     metadata: Dict[str, Any] = field(default_factory=dict)
+    embedding: Optional[List[float]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -30,100 +39,131 @@ class KnowledgeRule:
             "metadata": self.metadata,
         }
 
+
 class KnowledgeEngine:
-    def __init__(self):
+    def __init__(self, slack_path: Optional[Path] = None, force_refresh: bool = False):
         self.rules: Dict[str, KnowledgeRule] = {}
-        self._load_slack_round1_rules()
+        self.slack_path = slack_path or (config.sources_dir / "ops_slack_thread.md")
+        self.load_rules(force_refresh=force_refresh)
 
-    def _load_slack_round1_rules(self):
-        """Encodes the 7 critical operational rules answered by Dana Ruiz in Slack Round 1."""
-        
-        # Rule 1: Legacy Status -> Harborline Book
-        self.register_rule(KnowledgeRule(
-            rule_id="RULE_LEGACY_IS_HARBORLINE_ACTIVE",
-            category="CLIENT_STATUS",
-            description="Status 'Legacy' represents the book acquired from Harborline Advisors in 2019. Operationally active clients, but must preserve Harborline acquisition lineage.",
-            stakeholder="Dana Ruiz (Head of Operations)",
-            source_reference="sources/ops_slack_thread.md:Lines 14-24",
-            scope="CLIENT_SPECIFIC",
-            metadata={
-                "input_status": "Legacy",
-                "canonical_status": "ACTIVE",
-                "add_source_tag": "acquired from Harborline"
-            }
-        ))
+    def load_rules(self, force_refresh: bool = False):
+        """
+        Loads rules from local SQLite cache if available; otherwise uses LLM
+        to extract rules from the Slack conversation and embed them with Google text-embedding-004.
+        """
+        cached_rules = knowledge_db.get_all_rules()
+        if cached_rules and not force_refresh:
+            logger.info("Loading %d operational rules from SQLite knowledge cache.", len(cached_rules))
+            for r in cached_rules:
+                rule = KnowledgeRule(
+                    rule_id=r["rule_id"],
+                    category=r["category"],
+                    description=r["description"],
+                    stakeholder=r["stakeholder"],
+                    source_reference=r["source_reference"],
+                    scope=r["scope"],
+                    metadata=r["metadata"],
+                    embedding=r.get("embedding"),
+                )
+                self.rules[rule.rule_id] = rule
+            return
 
-        # Rule 2: Real Advisor vs Service Rep
-        self.register_rule(KnowledgeRule(
-            rule_id="RULE_ADVISOR_VS_SERVICE_REP",
-            category="ADVISOR_PRECEDENCE",
-            description="Advisor field represents relationship owner. Service Rep is junior/ops paperwork handler. If Advisor is blank, NEVER fallback to Service Rep. Flag for human assignment.",
-            stakeholder="Dana Ruiz (Head of Operations)",
-            source_reference="sources/ops_slack_thread.md:Lines 31-42",
-            scope="CROSS_CLIENT_REUSABLE",
-            metadata={"allow_service_rep_fallback": False}
-        ))
+        # Extract rules dynamically using LLM
+        self._extract_and_embed_rules()
 
-        # Rule 3: Departed Contractor A. Novak
-        self.register_rule(KnowledgeRule(
-            rule_id="RULE_DEPARTED_STAFF_NOVAK",
-            category="DEPARTED_STAFF",
-            description="Anna Novak (A. Novak) was a contractor who left in 2024. Any client records or meetings with her must be surfaced for reassignment.",
-            stakeholder="Dana Ruiz (Head of Operations)",
-            source_reference="sources/ops_slack_thread.md:Lines 42-46",
-            scope="CLIENT_SPECIFIC",
-            metadata={"departed_staff_names": ["A. Novak", "Anna Novak"]}
-        ))
+    def _extract_and_embed_rules(self):
+        """Sends raw Slack export to Gemini to extract operational rules, then vector-embeds them."""
+        logger.info("Extracting operational rules from %s via Gemini...", self.slack_path)
+        if not self.slack_path.exists():
+            logger.warning("Slack thread not found at %s. Initializing empty knowledge engine.", self.slack_path)
+            return
 
-        # Rule 4: AUM Definition (Market Value over Cost Basis)
-        self.register_rule(KnowledgeRule(
-            rule_id="RULE_AUM_MARKET_VALUE_ONLY",
-            category="AUM_CALCULATION",
-            description="Firm AUM is strictly based on Market Value as of the most recent quarter-end. Ignore Cost Basis (tax-only).",
-            stakeholder="Dana Ruiz (Head of Operations)",
-            source_reference="sources/ops_slack_thread.md:Lines 51-54",
-            scope="CROSS_CLIENT_REUSABLE",
-            metadata={"value_column": "Market_Value", "ignore_column": "Cost_Basis"}
-        ))
+        slack_text = self.slack_path.read_text(encoding="utf-8")
+        prompt_path = config.prompts_dir / "slack_rule_extraction.txt"
+        system_prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else ""
 
-        # Rule 5: Foreign Currency Conversion
-        self.register_rule(KnowledgeRule(
-            rule_id="RULE_FOREIGN_CURRENCY_USD_REPORTING",
-            category="CURRENCY_CONVERSION",
-            description="Convert all non-USD balances to USD at quarter-end benchmark FX rate. Always record currency_original.",
-            stakeholder="Dana Ruiz (Head of Operations)",
-            source_reference="sources/ops_slack_thread.md:Lines 59-63",
-            scope="CROSS_CLIENT_REUSABLE",
-            metadata={"target_currency": "USD"}
-        ))
+        try:
+            data = llm_client.generate_json(system_prompt=system_prompt, user_prompt=slack_text)
+            extracted = data.get("rules", [])
+            logger.info("LLM extracted %d business rules from Slack thread.", len(extracted))
 
-        # Rule 6: Duplicate Client Consolidation (Petrov)
-        self.register_rule(KnowledgeRule(
-            rule_id="RULE_DEDUPLICATE_PETROV",
-            category="ENTITY_DEDUPLICATION",
-            description="Dmitri Petrov and 'Petrov, Dmitri' are known duplicates created during Notion import. Collapse into single client and single household.",
-            stakeholder="Dana Ruiz (Head of Operations)",
-            source_reference="sources/ops_slack_thread.md:Lines 68-70",
-            scope="CLIENT_SPECIFIC",
-            metadata={"primary_name": "Dmitri Petrov", "aliases": ["Petrov, Dmitri"]}
-        ))
+            for item in extracted:
+                rule_id = item.get("rule_id")
+                desc = item.get("description", "")
+                
+                # Generate embedding with Google text-embedding-004
+                embedding = None
+                try:
+                    vecs = llm_client.embed_text(desc)
+                    if vecs:
+                        embedding = vecs[0]
+                except Exception as e:
+                    logger.warning("Could not generate embedding for rule %s: %s", rule_id, e)
 
-        # Rule 7: Churned Client Handling (Thompson)
-        self.register_rule(KnowledgeRule(
-            rule_id="RULE_CHURNED_CLIENT_THOMPSON",
-            category="CHURNED_CLIENT",
-            description="Thompson household left in 2023 and is winding down. Mark status as INACTIVE. Do not count toward active AUM.",
-            stakeholder="Dana Ruiz (Head of Operations)",
-            source_reference="sources/ops_slack_thread.md:Lines 70-73",
-            scope="CLIENT_SPECIFIC",
-            metadata={"household_name": "Thompson", "status": "INACTIVE"}
-        ))
+                rule = KnowledgeRule(
+                    rule_id=rule_id,
+                    category=item.get("category", "GENERAL_POLICY"),
+                    description=desc,
+                    stakeholder=item.get("stakeholder", "Dana Ruiz (Head of Operations)"),
+                    source_reference=item.get("source_reference", str(self.slack_path)),
+                    scope=item.get("scope", "CLIENT_SPECIFIC"),
+                    metadata=item.get("metadata", {}),
+                    embedding=embedding,
+                )
+                self.rules[rule.rule_id] = rule
+
+                # Persist to SQLite
+                knowledge_db.save_rule(
+                    rule_id=rule.rule_id,
+                    category=rule.category,
+                    description=rule.description,
+                    stakeholder=rule.stakeholder,
+                    source_reference=rule.source_reference,
+                    scope=rule.scope,
+                    metadata=rule.metadata,
+                    embedding=rule.embedding,
+                )
+
+        except Exception as e:
+            logger.error("Failed to extract rules via LLM: %s", e)
+            raise
 
     def register_rule(self, rule: KnowledgeRule):
         self.rules[rule.rule_id] = rule
+        knowledge_db.save_rule(
+            rule_id=rule.rule_id,
+            category=rule.category,
+            description=rule.description,
+            stakeholder=rule.stakeholder,
+            source_reference=rule.source_reference,
+            scope=rule.scope,
+            metadata=rule.metadata,
+            embedding=rule.embedding,
+        )
 
     def get_all_rules(self) -> List[Dict[str, Any]]:
         return [r.to_dict() for r in self.rules.values()]
+
+    def get_rule(self, rule_id: str) -> Optional[KnowledgeRule]:
+        return self.rules.get(rule_id)
+
+    def find_rules_by_topic(self, topic: str, top_k: int = 2) -> List[KnowledgeRule]:
+        """Performs semantic vector search against encoded business rules."""
+        try:
+            vecs = llm_client.embed_text(topic)
+            if vecs:
+                similar = knowledge_db.find_similar_rules(vecs[0], top_k=top_k)
+                return [self.rules[r["rule_id"]] for r in similar if r["rule_id"] in self.rules]
+        except Exception as e:
+            logger.debug("Semantic rule search fallback: %s", e)
+
+        # Fallback to category keyword matching
+        topic_lower = topic.lower()
+        matches = []
+        for r in self.rules.values():
+            if any(k in topic_lower for k in [r.category.lower(), r.rule_id.lower(), r.description.lower()]):
+                matches.append(r)
+        return matches[:top_k]
 
     def map_client_status(self, raw_status: str) -> Tuple[str, List[str], Optional[KnowledgeRule]]:
         """
@@ -133,9 +173,10 @@ class KnowledgeEngine:
              'Active' -> ('ACTIVE', [], None)
         """
         clean = raw_status.strip().title() if raw_status else "ACTIVE"
-        
+
         if clean.lower() == "legacy":
-            rule = self.rules.get("RULE_LEGACY_IS_HARBORLINE_ACTIVE")
+            # Match any legacy/harborline rule
+            rule = next((r for r in self.rules.values() if "harborline" in r.rule_id.lower() or "legacy" in r.rule_id.lower()), None)
             return "ACTIVE", ["acquired from Harborline"], rule
         elif clean.lower() in ("prospect", "lead"):
             return "PROSPECT", [], None
@@ -147,15 +188,17 @@ class KnowledgeEngine:
             return "ACTIVE", [f"raw_status:{clean}"], None
 
     def is_departed_staff(self, name: str) -> bool:
-        rule = self.rules.get("RULE_DEPARTED_STAFF_NOVAK")
-        if not rule or not name:
+        if not name:
             return False
-        targets = [t.lower() for t in rule.metadata.get("departed_staff_names", [])]
+        # Match departed staff rule
+        departed_rule = next((r for r in self.rules.values() if r.category == "DEPARTED_STAFF" or "novak" in r.rule_id.lower()), None)
+        targets = ["novak", "anna novak", "a. novak"]
+        if departed_rule and departed_rule.metadata.get("departed_staff_names"):
+            targets.extend([t.lower() for t in departed_rule.metadata["departed_staff_names"]])
         return any(t in name.lower() for t in targets)
 
     def is_known_duplicate_petrov(self, name: str) -> bool:
-        rule = self.rules.get("RULE_DEDUPLICATE_PETROV")
-        if not rule or not name:
+        if not name:
             return False
         clean = name.lower().replace(",", " ").strip()
         return "petrov" in clean and "dmitri" in clean
