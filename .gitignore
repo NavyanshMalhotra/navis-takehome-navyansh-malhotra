@@ -1,0 +1,19 @@
+# Environment & Virtualenvs
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE & Tooling
+.idea/
+.vscode/
+
+# Local Environment Overrides (keep .env.example tracked)
+.env.local
