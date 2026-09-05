@@ -20,8 +20,8 @@ Per our Round 1 discussion, we do not guess or fall back to Service Reps. The fo
 - **Evidence**: Notion Client row for 'Maria Delgado'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'Unassigned advisor of record'.
 - **Candidate Options**:
   - Assign to Priya Raman (San Francisco)
-  - Assign to Priya Raman (San Francisco)
   - Assign to Marcus Webb (Chicago)
+  - Assign to Elena Sokolova (Chicago)
 - **Proposed Default**: Assign to Marcus Webb (Advisor, Chicago)
 
 ### Item 2: Unassigned Primary Advisor for Household 'Whitfield' (George Whitfield)
@@ -29,8 +29,8 @@ Per our Round 1 discussion, we do not guess or fall back to Service Reps. The fo
 - **Evidence**: Notion Client row for 'George Whitfield'. Status='Legacy'. Service Rep='A. Novak'. Page note: 'None'. WARNING: Service Rep 'A. Novak' is Anna Novak who departed the firm.
 - **Candidate Options**:
   - Assign to Priya Raman (San Francisco)
-  - Assign to Priya Raman (San Francisco)
   - Assign to Marcus Webb (Chicago)
+  - Assign to Elena Sokolova (Chicago)
 - **Proposed Default**: Assign to Priya Raman (Senior Advisor, San Francisco)
 
 ### Item 3: Unassigned Primary Advisor for Household 'Petit' (Louis Petit)
@@ -38,8 +38,8 @@ Per our Round 1 discussion, we do not guess or fall back to Service Reps. The fo
 - **Evidence**: Notion Client row for 'Louis Petit'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'Unassigned advisor of record'.
 - **Candidate Options**:
   - Assign to Priya Raman (San Francisco)
-  - Assign to Priya Raman (San Francisco)
   - Assign to Marcus Webb (Chicago)
+  - Assign to Elena Sokolova (Chicago)
 - **Proposed Default**: Assign to Marcus Webb (Advisor, Chicago)
 
 ### Item 4: Unassigned Primary Advisor for Household 'Vandermeer' (Joris Vandermeer)
@@ -47,8 +47,8 @@ Per our Round 1 discussion, we do not guess or fall back to Service Reps. The fo
 - **Evidence**: Notion Client row for 'Joris Vandermeer'. Status='Active'. Service Rep=''. Page note: 'None'.
 - **Candidate Options**:
   - Assign to Priya Raman (San Francisco)
-  - Assign to Priya Raman (San Francisco)
   - Assign to Marcus Webb (Chicago)
+  - Assign to Elena Sokolova (Chicago)
 - **Proposed Default**: Assign to Priya Raman (Senior Advisor, San Francisco)
 
 ## Part 2: Custodian Accounts with No Matching CRM Client

@@ -52,7 +52,7 @@ class CanonicalTransformer:
 
         # 3. Transform Clients and Synthesize Households
         households, clients, unassigned_advisor_clarifs = self._transform_households_and_clients(
-            raw_clients, client_notes, advisors_by_name
+            raw_clients, client_notes, advisors_by_id, advisors_by_name
         )
         clarifications.extend(unassigned_advisor_clarifs)
 
@@ -158,6 +158,7 @@ class CanonicalTransformer:
         self,
         raw_clients: List[Dict[str, Any]],
         client_notes: Dict[str, Dict[str, Any]],
+        advisors_by_id: Dict[str, Advisor],
         advisors_by_name: Dict[str, Advisor]
     ) -> Tuple[List[Household], List[Client], List[ClarificationItem]]:
         """
@@ -240,11 +241,8 @@ class CanonicalTransformer:
             if not advisor_id:
                 # Flag to Dana in Round 2
                 clarif_id = f"CLARIF-ADV-{hh_slug}"
-                # Find recommended advisor based on firm staffing
-                candidate_advisors = [
-                    f"{adv.full_name} ({adv.role}, {adv.office})"
-                    for adv in list(advisors_by_name.values())[:3]
-                ]
+                # Get unique active advisors from advisor roster (keyed by advisor_id)
+                unique_advisors = list(advisors_by_id.values())
                 proposed_default = "Marcus Webb (Advisor, Chicago)" if "Marcus" in raw_srep else "Priya Raman (Senior Advisor, San Francisco)"
                 
                 evidence_text = f"Notion Client row for '{name}'. Status='{raw_status}'. Service Rep='{raw_srep}'. Page note: '{insights.get('advisor_notes', 'None')}'."
@@ -258,7 +256,7 @@ class CanonicalTransformer:
                     trigger=f"Advisor field is blank in Notion CRM for '{name}'. Canonical Rule 1 requires exactly one non-null primary advisor.",
                     evidence=evidence_text,
                     candidate_options=[
-                        f"Assign to {adv.full_name} ({adv.office})" for adv in list(advisors_by_name.values())[:3]
+                        f"Assign to {adv.full_name} ({adv.office})" for adv in unique_advisors[:3]
                     ],
                     proposed_default=f"Assign to {proposed_default}",
                     confidence=0.40,
