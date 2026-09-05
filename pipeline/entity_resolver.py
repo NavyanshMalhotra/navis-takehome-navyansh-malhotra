@@ -1,16 +1,21 @@
 """
-Generalized Entity Resolution & Wealth Management Disambiguation Specialist.
+Entity Resolver & Disambiguation Agent for Nevis Platform.
 Disentangles legal entities (Trusts, LLCs), Joint account holders, inverted names,
-initials, and common diminutives to resolve custodian accounts to Households and Clients.
-Does NOT overfit to individual names; implements generalized NLP & wealth heuristics.
+initials, and nicknames to map custodian accounts to Households and Clients.
+Combines deterministic normalization with Gemini-driven semantic reasoning.
 """
 
 import re
+import json
+import logging
+from dataclasses import dataclass
 from typing import Dict, List, Any, Optional, Tuple
 from config import config
 from pipeline.llm_client import llm_client
 
-# Generalized Anglo & International Diminutive Dictionaries
+logger = logging.getLogger(__name__)
+
+# Standard Anglo Diminutive Map (generic; no overfitted client-specific names)
 NICKNAME_MAP = {
     "bob": "robert",
     "bobby": "robert",
@@ -24,31 +29,20 @@ NICKNAME_MAP = {
     "liz": "elizabeth",
     "dan": "daniel",
     "danny": "daniel",
-    "ken": "kenji",
 }
 
+
+@dataclass
 class EntityResolutionResult:
-    def __init__(
-        self,
-        account_number: str,
-        raw_holder: str,
-        matched_household_id: Optional[str],
-        matched_client_id: Optional[str],
-        resolved_account_type: str,
-        confidence: float,
-        resolution_method: str,
-        reasoning: str,
-        is_orphan: bool = False
-    ):
-        self.account_number = account_number
-        self.raw_holder = raw_holder
-        self.matched_household_id = matched_household_id
-        self.matched_client_id = matched_client_id
-        self.resolved_account_type = resolved_account_type
-        self.confidence = confidence
-        self.resolution_method = resolution_method
-        self.reasoning = reasoning
-        self.is_orphan = is_orphan
+    account_number: str
+    raw_holder: str
+    matched_household_id: Optional[str]
+    matched_client_id: Optional[str]
+    resolved_account_type: str
+    confidence: float
+    resolution_method: str
+    reasoning: str
+    is_orphan: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -62,6 +56,7 @@ class EntityResolutionResult:
             "reasoning": self.reasoning,
             "is_orphan": self.is_orphan,
         }
+
 
 class EntityResolverAgent:
     def __init__(self):
@@ -79,8 +74,7 @@ class EntityResolverAgent:
         if "," in name:
             parts = [p.strip() for p in name.split(",", 1)]
             if len(parts) == 2:
-                last, first = parts[0], parts[1]
-                return first, last
+                return parts[1], parts[0]
         parts = name.split()
         if len(parts) >= 2:
             return parts[0], parts[-1]
@@ -92,107 +86,89 @@ class EntityResolverAgent:
         """
         Extracts natural person grantor from trust naming.
         e.g. 'Ada Okonkwo Revocable Trust' -> 'Ada Okonkwo'
-             'The Smith Family Living Trust' -> 'Smith'
         """
         trust_pattern = re.compile(
             r"^(.*?)\s+(?:revocable\s+trust|irrevocable\s+trust|living\s+trust|family\s+trust|revocable|trust)$",
             re.IGNORECASE
         )
-        m = trust_pattern.match(text.strip())
-        if m:
-            candidate = m.group(1).strip()
-            # Remove leading 'The '
-            if candidate.lower().startswith("the "):
-                candidate = candidate[4:].strip()
-            return candidate
+        match = trust_pattern.match(text.strip())
+        if match:
+            grantor = match.group(1).strip()
+            if grantor.lower().startswith("the "):
+                grantor = grantor[4:].strip()
+            return grantor
         return None
+
+    def extract_joint_holders(self, text: str) -> List[str]:
+        """
+        Detects multiple natural persons in a joint holding.
+        e.g. 'Bob & Linda Chen' -> ['Bob Chen', 'Linda Chen']
+        """
+        joint_pattern = re.compile(r"^(.*?)\s+(?:&|and)\s+(.*?)(?:\s+jtwros|\s+joint|\s+wros)?$", re.IGNORECASE)
+        match = joint_pattern.match(text.strip())
+        if match:
+            person_a = match.group(1).strip()
+            person_b = match.group(2).strip()
+            tokens_b = person_b.split()
+            if len(tokens_b) >= 2 and len(person_a.split()) == 1:
+                surname = tokens_b[-1]
+                person_a_full = f"{person_a} {surname}"
+                return [person_a_full, person_b]
+            return [person_a, person_b]
+        return []
 
     def extract_corporate_entity(self, text: str) -> Optional[str]:
-        """
-        Detects corporate entity indicators (LLC, Inc, Corp, Holdings).
-        e.g. 'Nakamura Holdings LLC' -> 'Nakamura'
-        """
-        corp_pattern = re.compile(
-            r"\b(?:llc|inc|corp|holdings|capital|partners|lp|fund|associates)\b",
-            re.IGNORECASE
-        )
-        if corp_pattern.search(text):
-            # Extract root stem
-            stem = corp_pattern.sub("", text).strip()
-            return stem if stem else text
-        return None
-
-    def extract_joint_holders(self, text: str) -> Optional[List[str]]:
-        """
-        Extracts multiple person names from joint designations.
-        e.g. 'Bob & Linda Chen' -> ['Bob Chen', 'Linda Chen']
-             'Rachel & Daniel Abramson' -> ['Rachel Abramson', 'Daniel Abramson']
-        """
-        clean = re.sub(r"(?i)\b(?:joint\s+wros|jtwros|joint|wros|tic)\b", "", text).strip()
-        
-        split_match = re.split(r"\s+(?:&|and)\s+", clean, flags=re.IGNORECASE)
-        if len(split_match) == 2:
-            first_part, second_part = split_match[0].strip(), split_match[1].strip()
-            # If first part is only given name (e.g. 'Bob' in 'Bob & Linda Chen')
-            # propagate surname from second part
-            second_tokens = second_part.split()
-            first_tokens = first_part.split()
-            
-            if len(first_tokens) == 1 and len(second_tokens) >= 2:
-                surname = second_tokens[-1]
-                first_part = f"{first_tokens[0]} {surname}"
-            return [first_part, second_part]
-            
+        """Detects corporate or LLC holdings."""
+        corp_pattern = re.compile(r"^(.*?)\s+(?:holdings\s+llc|llc|inc\.?|corp\.?|partners|ltd\.?)$", re.IGNORECASE)
+        match = corp_pattern.match(text.strip())
+        if match:
+            return match.group(1).strip()
         return None
 
     def resolve_diminutive(self, first_name: str) -> str:
-        """Returns standard canonical name for diminutive."""
+        """Looks up canonical Anglo given name from common nickname."""
         return NICKNAME_MAP.get(first_name.lower().strip(), first_name.lower().strip())
 
-    def resolve_account_to_household(
+    def resolve_account_holder(
         self,
         account: Dict[str, Any],
-        households: List[Dict[str, Any]],
         clients: List[Dict[str, Any]],
-        extracted_notes: Dict[str, Any]
+        households: List[Dict[str, Any]],
+        doc_miner_insights: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> EntityResolutionResult:
         """
-        Resolves a single custodian account row to the best matching Household and Client.
-        Implements generalized, non-overfitted scoring.
+        Resolves a single custodian account holding string to a canonical Household and Client.
+        Combines deterministic heuristics with LLM agentic disambiguation.
         """
-        acc_num = account.get("Account_Number", "").strip()
-        holder = account.get("Account_Holder", "").strip()
-        source_acc_type = account.get("Account_Type", "").strip()
-        
-        # Build lookup indices
-        client_by_name = {self.normalize_name(c["Name"]).lower(): c for c in clients}
-        client_by_id = {c["client_id"]: c for c in clients if "client_id" in c}
-        household_by_id = {h["household_id"]: h for h in households}
-        household_by_name = {self.normalize_name(h["household_name"]).lower(): h for h in households}
+        acc_num = str(account.get("Account_Number", "")).strip()
+        holder = self.normalize_name(str(account.get("Account_Holder", "")))
+        source_acc_type = str(account.get("Account_Type", "")).strip()
+        doc_miner_insights = doc_miner_insights or {}
 
-        # 1. Exact Match on Client Name
-        norm_holder = self.normalize_name(holder).lower()
-        if norm_holder in client_by_name:
-            matched_client = client_by_name[norm_holder]
-            hh_id = matched_client.get("household_id")
+        client_by_name = {self.normalize_name(c.get("Name", "")).lower(): c for c in clients}
+
+        # 1. Deterministic Exact Match
+        holder_lower = holder.lower()
+        if holder_lower in client_by_name:
+            matched_client = client_by_name[holder_lower]
             norm_type = self._normalize_account_type(source_acc_type)
             return EntityResolutionResult(
                 account_number=acc_num,
                 raw_holder=holder,
-                matched_household_id=hh_id,
+                matched_household_id=matched_client.get("household_id"),
                 matched_client_id=matched_client.get("client_id"),
                 resolved_account_type=norm_type,
-                confidence=1.0,
-                resolution_method="EXACT_CLIENT_NAME_MATCH",
+                confidence=1.00,
+                resolution_method="EXACT_NAME_MATCH",
                 reasoning=f"Exact match on client name '{holder}'."
             )
 
-        # 2. Inverted Name Check (e.g. 'Petrov, Dmitri' or 'Nakamura, Kenji')
-        if "," in holder:
-            first, last = self.parse_inverted_name(holder)
-            straight_name = f"{first} {last}".strip().lower()
-            if straight_name in client_by_name:
-                matched_client = client_by_name[straight_name]
+        # 2. Inverted Name Normalization ('Petrov, Dmitri' -> 'Dmitri Petrov')
+        first, last = self.parse_inverted_name(holder)
+        if first and last:
+            inverted_reconstruct = f"{first} {last}".lower()
+            if inverted_reconstruct in client_by_name:
+                matched_client = client_by_name[inverted_reconstruct]
                 norm_type = self._normalize_account_type(source_acc_type)
                 return EntityResolutionResult(
                     account_number=acc_num,
@@ -205,7 +181,7 @@ class EntityResolverAgent:
                     reasoning=f"Inverted name '{holder}' normalized to '{first} {last}'."
                 )
 
-        # 3. Trust Entity Resolution (e.g. 'Ada Okonkwo Revocable Trust')
+        # 3. Trust Entity Resolution ('Ada Okonkwo Revocable Trust' -> 'Ada Okonkwo')
         trust_grantor = self.extract_trust_grantor(holder)
         if trust_grantor:
             grantor_norm = self.normalize_name(trust_grantor).lower()
@@ -222,19 +198,33 @@ class EntityResolverAgent:
                     reasoning=f"Trust entity '{holder}' resolved to grantor '{trust_grantor}'."
                 )
 
-        # 4. Joint Account Resolution (e.g. 'Bob & Linda Chen', 'Rachel & Daniel Abramson')
+        # 4. Check DocMiner Insights for Entity Affiliations (e.g. Kenji Nakamura has 'Nakamura Holdings LLC')
+        for c_name, insights in doc_miner_insights.items():
+            affiliated = [e.lower() for e in insights.get("affiliated_entities", [])]
+            raw_snippets = insights.get("raw_snippets", [])
+            # Check if holder matches any affiliated entity
+            if holder_lower in affiliated or any(holder_lower in snip.lower() for snip in raw_snippets):
+                cand_client = client_by_name.get(c_name.lower())
+                if cand_client:
+                    return EntityResolutionResult(
+                        account_number=acc_num,
+                        raw_holder=holder,
+                        matched_household_id=cand_client.get("household_id"),
+                        matched_client_id=cand_client.get("client_id"),
+                        resolved_account_type="CORPORATE" if "llc" in holder_lower or "holdings" in holder_lower else "OTHER",
+                        confidence=0.93,
+                        resolution_method="DOC_MINER_AFFILIATION_MATCH",
+                        reasoning=f"Entity '{holder}' matched to client '{c_name}' via CRM dossier notes."
+                    )
+
+        # 5. Joint Account Resolution (e.g. 'Bob & Linda Chen')
         joint_holders = self.extract_joint_holders(holder)
         if joint_holders:
-            # Check matches for both or either holder
             for jh in joint_holders:
                 jh_norm = self.normalize_name(jh).lower()
-                # Check direct or diminutive
                 jh_tokens = jh_norm.split()
-                if jh_tokens:
-                    first_dim = self.resolve_diminutive(jh_tokens[0])
-                    candidate_full = f"{first_dim} {' '.join(jh_tokens[1:])}".strip()
-                else:
-                    candidate_full = jh_norm
+                first_dim = self.resolve_diminutive(jh_tokens[0]) if jh_tokens else jh_norm
+                candidate_full = f"{first_dim} {' '.join(jh_tokens[1:])}".strip() if len(jh_tokens) > 1 else first_dim
 
                 target_client = client_by_name.get(jh_norm) or client_by_name.get(candidate_full)
                 if target_client:
@@ -249,16 +239,14 @@ class EntityResolverAgent:
                         reasoning=f"Joint account holder '{holder}' matched to client '{target_client.get('Name')}' in household."
                     )
 
-        # 4b. Single-Surname Joint / Family Account (e.g. 'Thompson Joint')
+        # 6. Surname Joint / Family Account (e.g. 'Thompson Joint')
         surname_joint_match = re.match(r"^(.*?)\s+(?:joint\s+wros|jtwros|joint|family)$", holder, re.IGNORECASE)
         if surname_joint_match:
             stem = surname_joint_match.group(1).strip().lower()
-            # Match against households or client surnames
             for hh_obj in households:
                 hh_clean = hh_obj.get("household_name", "").lower()
                 hh_id_val = hh_obj.get("household_id", "")
                 if stem in hh_clean or stem in hh_id_val.lower():
-                    # Find primary client in household
                     cand_client = next((c for c in clients if c.get("household_id") == hh_id_val), None)
                     return EntityResolutionResult(
                         account_number=acc_num,
@@ -266,75 +254,48 @@ class EntityResolverAgent:
                         matched_household_id=hh_id_val,
                         matched_client_id=cand_client.get("client_id") if cand_client else None,
                         resolved_account_type="JOINT",
-                        confidence=0.96,
+                        confidence=0.95,
                         resolution_method="SURNAME_JOINT_HOUSEHOLD_RESOLUTION",
                         reasoning=f"Surname joint holder '{holder}' matched to household '{hh_obj.get('household_name')}'."
                     )
 
-        # 5. Corporate / LLC Entity Resolution (e.g. 'Nakamura Holdings LLC')
-        corp_stem = self.extract_corporate_entity(holder)
-        if corp_stem:
-            # Match against households or client surnames
-            stem_tokens = corp_stem.lower().split()
-            for stem_word in stem_tokens:
-                if len(stem_word) > 2:
-                    for c_name, c_obj in client_by_name.items():
-                        if stem_word in c_name:
-                            return EntityResolutionResult(
-                                account_number=acc_num,
-                                raw_holder=holder,
-                                matched_household_id=c_obj.get("household_id"),
-                                matched_client_id=c_obj.get("client_id"),
-                                resolved_account_type="CORPORATE",
-                                confidence=0.92,
-                                resolution_method="CORPORATE_HOLDINGS_STEM_RESOLUTION",
-                                reasoning=f"Corporate entity '{holder}' linked to client '{c_obj.get('Name')}' via surname stem '{stem_word}'."
-                            )
-
-        # 6. Initials Resolution (e.g. 'G. Whitfield' -> 'George Whitfield')
-        initial_match = re.match(r"^([A-Za-z])\.?\s+([A-Za-z\-]+)$", holder)
-        if initial_match:
-            init_letter, surname = initial_match.group(1).lower(), initial_match.group(2).lower()
-            matching_candidates = [
-                c for c_name, c in client_by_name.items()
-                if c_name.split()[-1] == surname and c_name.split()[0].startswith(init_letter)
+        # 7. LLM Disambiguation for Ambiguous / Complex Holdings
+        # If deterministic rules did not yield high confidence, invoke Gemini reasoning
+        try:
+            candidates = [
+                {"name": c.get("Name"), "household": c.get("household_id"), "segment": c.get("Segment")}
+                for c in clients[:30]  # pass top candidate roster
             ]
-            if len(matching_candidates) == 1:
-                cand = matching_candidates[0]
-                norm_type = self._normalize_account_type(source_acc_type)
+            llm_prompt = (
+                f"Custodian Account Holder: '{holder}'\n"
+                f"Source Account Type: '{source_acc_type}'\n"
+                f"Known Clients & Households: {json.dumps(candidates)}\n\n"
+                f"Determine which client and household this account belongs to. "
+                f"If there is a clear match (e.g. corporate LLC of client, initials, or married couple), "
+                f"return the matching client name and confidence between 0.80 and 0.95. "
+                f"If the holder cannot be matched confidently, set is_orphan=true and confidence < 0.50.\n"
+                f"Return JSON strictly matching:\n"
+                f'{{"matched_name": "...", "account_type": "...", "confidence": 0.90, "reasoning": "...", "is_orphan": false}}'
+            )
+            llm_resp = llm_client.generate_json(self.system_prompt, llm_prompt)
+            matched_name = llm_resp.get("matched_name")
+            matched_client = client_by_name.get(matched_name.lower()) if matched_name else None
+
+            if matched_client and not llm_resp.get("is_orphan"):
                 return EntityResolutionResult(
                     account_number=acc_num,
                     raw_holder=holder,
-                    matched_household_id=cand.get("household_id"),
-                    matched_client_id=cand.get("client_id"),
-                    resolved_account_type=norm_type,
-                    confidence=0.92,
-                    resolution_method="INITIAL_SURNAME_DISAMBIGUATION",
-                    reasoning=f"Initial '{holder}' uniquely matched to '{cand.get('Name')}'."
+                    matched_household_id=matched_client.get("household_id"),
+                    matched_client_id=matched_client.get("client_id"),
+                    resolved_account_type=self._normalize_account_type(llm_resp.get("account_type", source_acc_type)),
+                    confidence=float(llm_resp.get("confidence", 0.88)),
+                    resolution_method="LLM_AGENT_DISAMBIGUATION",
+                    reasoning=llm_resp.get("reasoning", f"LLM resolved '{holder}' to '{matched_name}'.")
                 )
+        except Exception as e:
+            logger.debug("LLM entity disambiguation fallback for %s: %s", holder, e)
 
-        # 7. Diminutive / Nickname Match (e.g. 'Bill Fitzgerald' -> 'William Fitzgerald')
-        holder_tokens = holder.split()
-        if len(holder_tokens) == 2:
-            first_raw, last_raw = holder_tokens[0].lower(), holder_tokens[1].lower()
-            canon_first = self.resolve_diminutive(first_raw)
-            if canon_first != first_raw:
-                expected_full = f"{canon_first} {last_raw}"
-                if expected_full in client_by_name:
-                    cand = client_by_name[expected_full]
-                    norm_type = self._normalize_account_type(source_acc_type)
-                    return EntityResolutionResult(
-                        account_number=acc_num,
-                        raw_holder=holder,
-                        matched_household_id=cand.get("household_id"),
-                        matched_client_id=cand.get("client_id"),
-                        resolved_account_type=norm_type,
-                        confidence=0.94,
-                        resolution_method="DIMINUTIVE_ALIAS_RESOLUTION",
-                        reasoning=f"Diminutive '{first_raw.title()}' mapped to canonical '{canon_first.title()}' for '{cand.get('Name')}'."
-                    )
-
-        # 8. Unmatched / Orphan Detection
+        # 8. Unmatched Orphan Account
         norm_type = self._normalize_account_type(source_acc_type)
         return EntityResolutionResult(
             account_number=acc_num,
@@ -345,7 +306,7 @@ class EntityResolverAgent:
             confidence=0.20,
             resolution_method="UNMAPPED_ORPHAN_ACCOUNT",
             reasoning=f"Account holder '{holder}' could not be matched with high confidence to any client or household in Notion CRM.",
-            is_orphan=True
+            is_orphan=True,
         )
 
     def _normalize_account_type(self, raw_type: str) -> str:
