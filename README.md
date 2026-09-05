@@ -1,203 +1,160 @@
-# Nevis Forward Deployed Engineer (FDE) Agentic Data Platform
+# Nevis Forward Deployed Engineer (FDE) - Agentic Data Onboarding Pipeline
 
-A production-grade, agentic data onboarding pipeline for wealth management firms. Automatically ingests, audits, disambiguates, and maps messy RIA source data (Notion CRM exports, custodian positions, advisor rosters, and Slack institutional lore) into the **Nevis Canonical Data Model**.
+A ReAct multi-agent data onboarding pipeline designed for wealth management RIAs. Ingests, audits, disambiguates, and maps unstandardized source data (Notion CRM exports, custodian positions, advisor rosters, and Slack institutional lore) into the **Nevis Canonical Data Model**.
 
 ---
 
-## 🚀 Quick Start (One-Command Execution)
+## 1. Quick Start
 
-The pipeline is designed to run end-to-end in **one single command** out-of-the-box:
+### Prerequisites
+- Python 3.10+ (tested on Python 3.12)
+- Google Gemini API key (supports AI Studio `AIza...` and Google Cloud Vertex AI Express keys `AQ...`)
 
 ```bash
-# 1. Clone or navigate to the directory
-cd "Nevis take home"
+# 1. Clone or navigate to the repository
+cd navis-takehome-navyansh-malhotra
 
-# 2. (Optional) Create virtual environment & install requirements
+# 2. Set up virtual environment and install dependencies
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Run the complete pipeline
+# 3. Configure API key
+cp .env.example .env
+# Edit .env and set GEMINI_API_KEY=your_key_here
+
+# 4. Run the pipeline
 python3 run_pipeline.py
 ```
 
-### Supplying an API Key
-The pipeline supports live LLM reasoning via **Google Gemini** (`gemini-2.5-flash`), paired with an automatic **calibrated offline fallback** (zero-key guarantee for 100% test reproducibility):
-
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-2. Set your `GEMINI_API_KEY`:
-   ```bash
-   GEMINI_API_KEY=AQ.Ab8RN...
-   ```
-   *(Model selection is managed cleanly in `config.py` rather than stored in `.env`).*
-   *Note: If no API key is supplied or if API restrictions apply, the pipeline automatically runs in **Calibrated Agent Fallback** mode, completing in under 0.1 seconds with identical canonical accuracy.*
+> **API Key Requirement**: The pipeline relies on live LLM reasoning via Google Gemini (`gemini-2.5-flash`) for unstructured text mining, legal entity disambiguation, and draft synthesis, as well as Google's `text-embedding-004` endpoint for vector embeddings of institutional lore. If the key is missing or invalid, execution halts with an explicit configuration error rather than silently generating unverified data.
 
 ---
 
-## 📦 Deliverables Produced by the Pipeline
+## 2. Deliverables Produced
 
-When `python3 run_pipeline.py` executes, it automatically generates and verifies:
+Execution generates and validates three primary deliverables:
 
 1. [`outputs/canonical_output.json`](outputs/canonical_output.json):
-   - 52 Households, 56 Clients, 51 Accounts, 7 Advisors, 17 Interactions.
-   - Total Canonical AUM: **$67,295,625.00 USD**.
-   - Every single entity carries a detailed `_provenance` dictionary citing the exact source file, line/row, agent/rule method, confidence score, and raw source snippet.
+   - **52 Households, 56 Clients, 50 Accounts, 7 Advisors, 17 Interactions**.
+   - **Total Custodian Market Value**: **$66,415,625.00 USD**.
+   - **Active Billing AUM**: **$66,403,225.00 USD** (reflects Rule 8: $12,400 excluded for churned Thompson household).
+   - Every entity includes an explicit `_provenance` dictionary citing the source file, row/line, resolving agent, confidence score, and extracted text evidence.
+   - 2 orphan custodian accounts (`Carlos Vasquez`, `Priyanka Mehta`) and 1 orphan interaction (`Redwood Capital`) are withheld from the canonical store and routed to clarifications.
+
 2. [`outputs/clarifications_round2.md`](outputs/clarifications_round2.md):
-   - The customer-ready message back to **Dana Ruiz** (Head of Operations).
-   - Scoped to the 7 items Round 1 did not settle (4 unassigned advisors, 2 orphan accounts, 1 orphan interaction).
-   - Follows the strict 4-part schema: **Trigger, Evidence, Candidate Options, Proposed Default**.
-   - Dana can answer the entire batch in a couple of lines.
+   - Client-ready message addressed to **Dana Ruiz** (Head of Operations).
+   - Scoped strictly to the 8 unresolved items: 4 unassigned advisor households, 2 orphan accounts, 1 orphan prospect meeting, and 1 departed contractor reference.
+   - Structured into 4 parts per item: **Trigger, Evidence, Candidate Options, Proposed Default**.
+
 3. [`DESIGN.md`](DESIGN.md):
-   - One-page design note covering system architecture, key trade-offs, and the Slack rules lifecycle.
+   - One-page technical note detailing the ReAct multi-agent graph architecture, unified Google embedding endpoint, local SQLite caching vs Cloud SQL (`pgvector`) persistence, dual-metric active AUM, and the Slack rules lifecycle.
 
 ---
 
-## 🖥️ Interactive Web UI & REST API Server
+## 3. ReAct Multi-Agent Graph Architecture
 
-For live visual inspection and Human-in-the-Loop triage, start the FastAPI server:
+The pipeline executes as a multi-agent system where specialized agents communicate over a shared blackboard state and invoke deterministic tools:
 
-```bash
-python3 run_server.py
 ```
-Then open **[http://localhost:8000](http://localhost:8000)** in your browser to access:
-- **Canonical Explorer**: Searchable, filterable view of all 5 canonical entities. Click any record to slide out the **Provenance Lineage Drawer**.
-- **HITL Triage Queue**: Interactive card interface allowing operators to assign advisors or approve candidate defaults, instantly updating canonical state via `POST /api/clarifications/resolve`.
-- **Round 2 Slack Message**: One-click clipboard copy of Dana's message.
-- **Rules & Audit Monitor**: Real-time view of the 7 codified business rules and invariant checks.
+                           ┌───────────────────────────────────────────────┐
+                           │      Lead Orchestrator Agent (ReAct Graph)    │
+                           └───────┬───────────────────────────────▲───────┘
+                                   │ Coordinates blackboard state  │
+                                   ▼                               │
+┌──────────────────────────────────┴───────────────────────────────┴───────────────────────────────────┐
+│                                 INTER-AGENT COMMUNICATION BUS                                        │
+│                                                                                                      │
+│  ┌───────────────────────┐          ┌──────────────────────┐          ┌───────────────────────────┐  │
+│  │ KnowledgeAgent        │◄────────►│ DocMinerAgent        │◄────────►│ EntityResolverAgent       │  │
+│  │ Ingests & vector-     │ (policy) │ Mines Notion notes   │ (roles / │ Disambiguates accounts,   │  │
+│  │ embeds Slack lore     │          │ for family / roles   │  spouses)│ trusts, LLCs to households│  │
+│  └──────────┬────────────┘          └──────────┬───────────┘          └─────────────┬─────────────┘  │
+│             │                                  │                                    │                │
+│             └──────────────────────────────────┼────────────────────────────────────┘                │
+│                                                ▼                                                     │
+│                                     ┌─────────────────────┐                                          │
+│                                     │ MappingAgent        │                                          │
+│                                     │ Transforms book &   │                                          │
+│                                     │ computes Active AUM │                                          │
+│                                     └──────────┬──────────┘                                          │
+│                                                │                                                     │
+│                                                ▼                                                     │
+│                                     ┌─────────────────────┐                                          │
+│                                     │ AuditorAgent        │──┐ (Reflective Feedback Loop)            │
+│                                     │ Rules 1-8 + Semantic│  │                                       │
+│                                     │ Plausibility Checks │◄─┘                                       │
+│                                     └──────────┬──────────┘                                          │
+│                                                │                                                     │
+│                                                ▼                                                     │
+│                                     ┌─────────────────────┐                                          │
+│                                     │ ClarificationAgent  │                                          │
+│                                     │ Drafts Round 2 msg  │                                          │
+│                                     └─────────────────────┘                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-### Core REST API Endpoints:
-- `POST /api/pipeline/run`: Triggers the end-to-end pipeline run.
-- `GET /api/pipeline/status`: Returns current pipeline metrics and AUM totals.
-- `GET /api/canonical`: Returns canonical entities with provenance lineage.
-- `GET /api/clarifications`: Returns open clarification items.
-- `POST /api/clarifications/resolve`: Submits human resolution for flagged items.
-- `GET /api/export/slack`: Returns formatted Slack markdown message.
-- `GET /api/audit`: Returns the post-mapping canonical invariant audit report.
+### Agents & Responsibilities
+- **KnowledgeAgent**: Ingests Slack lore (`ops_slack_thread.md`), uses Gemini to extract declarative rules, computes 768-dim embeddings via Google's `text-embedding-004` endpoint, and indexes them in a local SQLite cache (`outputs/knowledge_store.db`).
+- **DocMinerAgent**: Reads unstructured Markdown notes (`client_notes.md`, `meeting_notes.md`), extracting corporate entities (e.g. `Nakamura Holdings LLC`), spousal relationships, and operational flags with exact source citations.
+- **EntityResolverAgent**: Resolves entity linkages, trusts, joint accounts, and name variations using deterministic normalization and LLM disambiguation.
+- **MappingAgent**: Constructs canonical schemas, enforces foreign keys, executes multi-currency conversions to USD at benchmark quarter-end FX rates, and computes dual-metric AUM.
+- **AuditorAgent**: Evaluates 8 canonical rules and performs semantic plausibility checks. Can reject transformations and trigger feedback cycles.
+- **ClarificationAgent**: Synthesizes open discrepancies into a structured Round 2 Slack communication for operations.
 
 ---
 
-## 🧪 Automated Invariant & Canonical Rules Tests
+## 4. Canonical Rules Enforced
 
-Run the comprehensive automated test suite verifying all 7 Nevis Canonical Rules:
+The pipeline audits and guarantees compliance across 8 canonical rules:
+
+- **Rule 1 (Non-Null Advisor)**: Every household has a valid primary advisor FK. Unassigned households are routed to clarifications with proposed defaults.
+- **Rule 2 (AUM Calculation)**: Household `market_value_usd` strictly equals the sum of its associated account balances.
+- **Rule 3 (Unknown != Zero)**: Households with no custodial accounts have AUM set to `null`, never `$0.00`.
+- **Rule 4 (Zero Orphan Accounts)**: Custodian accounts with unresolvable household associations are withheld from canonical output and flagged in triage.
+- **Rule 5 (Currency Conversion)**: Non-USD accounts (EUR, CHF) are converted at quarter-end benchmark FX rates; original currency is preserved in `currency_original`.
+- **Rule 6 (CRM Field Preservation)**: Non-standard Notion attributes (fee schedules, risk profiles, Harborline acquisition tags) are retained in `source_tags`.
+- **Rule 7 (Zero Orphan Interactions)**: Interactions link to valid client/household records; orphan prospect meetings are held in triage.
+- **Rule 8 (Active Billing AUM vs Custodian Market Value)**: Custodian balances are preserved for balance-sheet reconciliation (`market_value_usd = 12400.0`), but inactive/churned households strictly yield `active_aum_usd = 0.0`.
+
+---
+
+## 5. Automated Tests
+
+Execute the unit and integration test suite:
 
 ```bash
 python3 -m unittest discover tests
 ```
 
-### Rules Verified by Test Suite:
-- **Rule 1 (Non-Null Advisor)**: Every household has exactly one non-null primary advisor FK.
-- **Rule 2 (AUM Calculation)**: Household AUM strictly equals the sum of its accounts' `market_value_usd`.
-- **Rule 3 (Unknown != Zero)**: Households with no accounts strictly have AUM set to `null` (`None`), never `$0.00`.
-- **Rule 4 (Zero Orphan Accounts)**: Orphan custodian accounts (`Carlos Vasquez`, `Priyanka Mehta`) are blocked from canonical output and routed to clarifications.
-- **Rule 5 (Currency Conversion)**: Multi-currency accounts (`Yusuf Al-Rashid` in EUR, `Francesca Bianchi` in CHF) are converted to USD at quarter-end FX benchmark rates, preserving `currency_original`.
-- **Rule 6 (CRM Field Preservation)**: Fee schedules, risk profiles, and Harborline acquisition tags are preserved in `source_tags`.
-- **Rule 7 (Zero Orphan Interactions)**: `Bob Chen` is resolved to `Robert Chen` in `Chen Household`; orphan prospect meeting (`Redwood Capital`) is blocked from canonical output.
-- **Slack Round 1 Verification**: Dmitri Petrov duplicate is collapsed; Thompson churned household is marked `INACTIVE`.
+---
+
+## 6. Inspection Web UI & REST API Server
+
+A local server is included for human-in-the-loop inspection and triage:
+
+```bash
+python3 run_server.py
+```
+Open **[http://localhost:8000](http://localhost:8000)** to view:
+- **Canonical Data Book**: Filterable, data-dense view of all canonical entities. Clicking any row opens the provenance drawer showing source citations and confidence.
+- **Triage & Clarifications Queue**: Triage interface for assigning advisors or confirming candidate defaults.
+- **Slack Round 2 Draft**: Customer-ready message ready for export.
+- **Rules & Audit Log**: Verification statuses for Rules 1 through 8.
+
+### Core REST Endpoints
+- `POST /api/pipeline/run`: Executes the end-to-end pipeline.
+- `GET /api/canonical`: Returns canonical entities with provenance lineage.
+- `GET /api/clarifications`: Returns open clarification items.
+- `POST /api/clarifications/resolve`: Resolves clarification items and applies overrides.
+- `GET /api/audit`: Returns the post-mapping audit report.
+- `GET /api/export/slack`: Returns formatted Slack markdown text.
 
 ---
 
-## ☁️ Enterprise Deployment Blueprint on Google Cloud Platform (GCP)
+## 7. Cloud Deployment Architecture (GCP)
 
-For production RIA scale (thousands of accounts, SOC 2 compliance, and institutional data isolation), the platform deploys natively on Google Cloud:
-
-```
-[Client / FDE Browser]
-          │
-          ▼ HTTPS (Cloud Armor + Identity-Aware Proxy)
-┌────────────────────────────────────────────────────────┐
-│ Google Cloud Run: nevis-agentic-pipeline-service       │
-│ - Stateless container hosting FastAPI & Web UI         │
-│ - Autoscales 0 -> N instances on demand                │
-│ - Cloud Run Jobs for asynchronous large batch syncs    │
-└──────────────┬───────────────────────────┬─────────────┘
-               │                           │
-               ▼                           ▼
-┌──────────────────────────────┐ ┌──────────────────────────────┐
-│ Cloud Storage (GCS)          │ │ Vertex AI                    │
-│ - gs://<firm>-raw-sources/   │ │ - Gemini 2.5 Flash / Pro     │
-│ - gs://<firm>-canonical-lake/│ │ - Vertex AI Agent Engine     │
-│ - CMEK Encryption at rest    │ │ - Vertex AI Search (Grounding)│
-└──────────────────────────────┘ └──────────────────────────────┘
-               │                           │
-               ▼                           ▼
-┌──────────────────────────────┐ ┌──────────────────────────────┐
-│ Cloud SQL (PostgreSQL 16)    │ │ Google Secret Manager        │
-│ - Canonical Relational Lake  │ │ - API Keys & Custodian Creds │
-│ - JSONB Provenance Lineage   │ │ - IAM Service Account Auth   │
-└──────────────────────────────┘ └──────────────────────────────┘
-```
-
-### Step-by-Step GCP Deployment Commands:
-
-1. **Build & Push Container to Artifact Registry**:
-   ```bash
-   gcloud builds submit --tag gcr.io/$PROJECT_ID/nevis-onboarding-engine:latest
-   ```
-
-2. **Deploy to Cloud Run (Serverless)**:
-   ```bash
-   gcloud run deploy nevis-onboarding-engine \
-     --image gcr.io/$PROJECT_ID/nevis-onboarding-engine:latest \
-     --platform managed \
-     --region us-central1 \
-     --allow-unauthenticated \
-     --set-env-vars GEMINI_MODEL=gemini-2.5-flash \
-     --set-secrets GEMINI_API_KEY=gemini-api-key:latest \
-     --memory 2Gi \
-     --cpu 2
-   ```
-
-3. **Vertex AI Native Authentication**:
-   In GCP, the pipeline leverages Google Cloud IAM Workload Identity:
-   ```python
-   from google import genai
-   client = genai.Client()  # Automatically authenticated via Cloud Run Service Account
-   ```
-
----
-
-## 🏛️ Project Directory Structure
-
-```
-├── config.py                  # Central configuration, paths, thresholds, and FX rates
-├── run_pipeline.py            # Primary CLI runner (one-command execution)
-├── run_server.py              # FastAPI server & Web UI entrypoint
-├── DESIGN.md                  # One-page architectural trade-offs & Slack rules write-up
-├── README.md                  # System documentation & deployment guide
-├── requirements.txt           # Python dependencies
-├── .env.example               # Environment variables template
-├── pipeline/
-│   ├── models.py              # Canonical schemas (Household, Client, Account, etc.)
-│   ├── readers.py             # Zero-dependency parsers for CSV, XLSX, and Markdown
-│   ├── validator.py           # Pre-flight source assumptions validator
-│   ├── knowledge_layer.py     # Declarative knowledge engine (Slack Round 1 rules)
-│   ├── llm_client.py          # Multi-provider client (Gemini / OpenAI / Offline)
-│   ├── doc_miner.py           # Unstructured Markdown note and Slack mining agent
-│   ├── entity_resolver.py     # Disambiguation specialist (Trusts, LLCs, Joint, Diminutives)
-│   ├── transformer.py         # Canonical transformation & multi-currency engine
-│   ├── auditor.py             # Adversarial post-mapping auditor for 7 Canonical Rules
-│   └── output_generator.py    # Generates canonical JSON & Round 2 Slack markdown
-├── prompts/
-│   ├── doc_mining.txt         # Prompt for unstructured note mining
-│   ├── entity_resolution.txt  # Prompt for legal entity and alias resolution
-│   └── clarification_drafting.txt # Prompt for drafting Round 2 Slack message
-├── outputs/
-│   ├── canonical_output.json  # Committed canonical book with full provenance
-│   └── clarifications_round2.md # Clean, client-ready message for Dana Ruiz
-├── server/
-│   ├── api.py                 # FastAPI REST application
-│   └── static/
-│       ├── index.html         # Modern single-page dashboard
-│       ├── styles.css         # Dark-mode glassmorphism styling
-│       └── app.js             # Client application logic & provenance drawer
-└── tests/
-    ├── test_rules.py          # Invariant tests for all 7 Nevis Canonical Rules
-    └── test_pipeline.py       # End-to-end integration and schema tests
-```
-
----
-
-## 📄 License
-Internal evaluation project for Nevis. Built by Forward Deployed Engineering.
+In production RIA environments, the service deploys as a containerized workload on Google Cloud:
+- **Google Cloud Run**: Serverless container hosting the FastAPI service and Web UI.
+- **Cloud SQL (PostgreSQL with `pgvector`)**: Persistent storage for canonical entities and vector embeddings of institutional lore.
+- **Google Vertex AI**: Enterprise Gemini 2.5 Flash and `text-embedding-004` endpoints authenticated via Cloud Run IAM Workload Identity (no static API keys).
+- **Google Cloud Storage (GCS)**: Source document and export artifact repository.

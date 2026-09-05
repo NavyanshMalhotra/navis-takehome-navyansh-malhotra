@@ -1,41 +1,79 @@
-# Design Note & Slack Rules Architecture
+# Design Note: ReAct Multi-Agent Architecture & Slack Rules Lifecycle
 
-## 1. Shape of the System & Architectural Trade-Offs
+## 1. System Architecture & Key Trade-Offs
 
-The Nevis onboarding engine bridges unstructured RIA reality (messy Notion exports, custodian spreadsheets, and Slack institutional lore) and the strict relational constraints of the Nevis canonical model.
+The Nevis onboarding engine bridges messy RIA data reality (Notion exports, custodian spreadsheets, and Slack institutional lore) with the strict relational constraints of the Nevis canonical model.
 
 ```
-Ingestion & Validation ──► Knowledge Layer ──► MoE Agent Network ──► Adversarial Auditor ──► Canonical JSON & Round 2 Slack
- (CSV, XLSX, Notes)       (Slack Encoded)     (Entity / Doc Miner)   (7 Canonical Rules)      (Committed Book + Questions)
+                           ┌───────────────────────────────────────────────┐
+                           │      Lead Orchestrator Agent (ReAct Graph)    │
+                           └───────┬───────────────────────────────▲───────┘
+                                   │ Coordinates blackboard state  │
+                                   ▼                               │
+┌──────────────────────────────────┴───────────────────────────────┴───────────────────────────────────┐
+│                                 INTER-AGENT COMMUNICATION BUS                                        │
+│                                                                                                      │
+│  ┌───────────────────────┐          ┌──────────────────────┐          ┌───────────────────────────┐  │
+│  │ KnowledgeAgent        │◄────────►│ DocMinerAgent        │◄────────►│ EntityResolverAgent       │  │
+│  │ Ingests & vector-     │ (policy) │ Mines Notion notes   │ (roles / │ Disambiguates accounts,   │  │
+│  │ embeds Slack lore     │          │ for family / roles   │  spouses)│ trusts, LLCs to households│  │
+│  └──────────┬────────────┘          └──────────┬───────────┘          └─────────────┬─────────────┘  │
+│             │                                  │                                    │                │
+│             └──────────────────────────────────┼────────────────────────────────────┘                │
+│                                                ▼                                                     │
+│                                     ┌─────────────────────┐                                          │
+│                                     │ MappingAgent        │                                          │
+│                                     │ Transforms book &   │                                          │
+│                                     │ computes Active AUM │                                          │
+│                                     └──────────┬──────────┘                                          │
+│                                                │                                                     │
+│                                                ▼                                                     │
+│                                     ┌─────────────────────┐                                          │
+│                                     │ AuditorAgent        │──┐ (Reflective Re-eval Feedback Loop)    │
+│                                     │ Rules 1-8 + Semantic│  │                                       │
+│                                     │ Plausibility Checks │◄─┘                                       │
+│                                     └──────────┬──────────┘                                          │
+│                                                │                                                     │
+│                                                ▼                                                     │
+│                                     ┌─────────────────────┐                                          │
+│                                     │ ClarificationAgent  │                                          │
+│                                     │ Drafts Round 2 msg  │                                          │
+│                                     └─────────────────────┘                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Key Trade-Offs Made:
-1. **Deterministic Foundations vs. LLM Judgment**:
-   - *Trade-off*: We avoided both extreme antipatterns: a giant monolithic prompt (brittle, non-deterministic, unscalable) and a pure regex rule engine (fails on real-world edge cases like spousal notes, trust variants, and nicknames).
-   - *Decision*: Deterministic Python handles schema validation, mathematical aggregations, FX multiplication, exact ID lookups, and foreign key enforcement. The LLM (Google Gemini / Strands pattern) is deployed surgically where it earns its place: extracting implied family structures from unstructured Markdown notes, disambiguating complex legal entity grantors (`Ada Okonkwo Revocable Trust`), resolving diminutives (`Bob` -> `Robert`), and generating empathic, scoped questions for Dana.
-2. **Strict Canonical Gating vs. Silent Defaulting**:
+### Architectural Decisions & Trade-Offs:
+1. **ReAct Multi-Agent Graph vs. Chained LLMs vs. Pure Heuristics**:
+   - *Trade-off*: Pure heuristic regex fails on real-world wealth management nuances (spousal links, corporate signers, trust variants). Monolithic prompts or rigid sequential LLM chains are brittle and cannot self-correct.
+   - *Decision*: We built a ReAct agent graph with dedicated agents (`KnowledgeAgent`, `DocMinerAgent`, `EntityResolverAgent`, `MappingAgent`, `AuditorAgent`, `ClarificationAgent`). Deterministic code handles arithmetic, schema validation, FX multiplication, and foreign keys. Gemini (`gemini-2.5-flash`) handles judgment: unstructured note mining, ambiguous entity resolution, semantic plausibility, and message drafting. Agents communicate via tools and can trigger reflective feedback cycles before escalating.
+2. **Strict Canonical Gating vs. Silent Guessing**:
    - *Trade-off*: Canonical Rule 1 mandates non-null primary advisors. Four clients (`Delgado`, `Whitfield`, `Petit`, `Vandermeer`) had blank advisors in Notion.
-   - *Decision*: Dana explicitly ordered: *"Don't guess. Flag those to me."* Rather than inventing fake advisors or defaulting to departed staff (`A. Novak`), we segregated unassigned households into a **Pending Clarification** staging state, allowing the valid book to achieve 100% canonical compliance while presenting Dana with a scoped, single-click resolution batch.
-3. **Field-Level Provenance Overhead vs. Auditability**:
-   - *Trade-off*: Attaching `_provenance` metadata to every mapped attribute increases JSON payload size (~275 KB).
-   - *Decision*: In wealth management, unexplained data mutation is fatal. Provenance citing the source file, row, agent method, and confidence is mandatory for regulatory auditability and client trust.
+   - *Decision*: Per Dana's explicit instruction (*"Don't guess. Flag those to me"*), we route unassigned accounts to Clarifications Round 2 with proposed defaults, assigning provisional staging status rather than inventing fake data.
+3. **Dual-Metric Accounting: Total Market Value vs. Active Billing AUM**:
+   - *Trade-off*: Thompson churned in 2023 but holds a remaining account balance ($12,400). Dropping the account loses reconciliation with custodian truth; counting it inflates active AUM.
+   - *Decision*: We implement dual-metric accounting on `Household`: `market_value_usd = $12,400` (custodian truth) and `active_aum_usd = $0.00` (enforcing Dana's rule: `is_active = False` $\rightarrow$ active AUM = 0).
+4. **Unified Google Encoding & Model Stack**:
+   - *Decision*: A single `GEMINI_API_KEY` powers both generation (`gemini-2.5-flash`) and vector embeddings via Google's `text-embedding-004` encoding endpoint, requiring zero secondary provider keys.
+5. **Storage Architecture: Local SQLite Cache vs. Cloud DB (GCloud)**:
+   - *Local CLI Execution*: Caches extracted rules and 768-dim vector embeddings in a lightweight local SQLite database (`outputs/knowledge_store.db`), ensuring fast, reproducible execution without re-embedding on every run.
+   - *Production Cloud Architecture (GCloud)*: For firm-wide RIA deployments, the persistence layer targets Cloud SQL (PostgreSQL with `pgvector`) or Vertex AI Vector Search / Firestore on Google Cloud. This allows institutional rules and entity aliases to be shared across advisors, persisted across sync loops, and queried via cosine similarity.
 
 ---
 
 ## 2. Slack Business Rules: Extraction, Encoding, & Lifecycle Management
 
-From `sources/ops_slack_thread.md`, we extracted and codified 7 foundational business rules into our declarative `KnowledgeEngine`:
+Rather than hardcoding rules in Python, `KnowledgeAgent` reads `sources/ops_slack_thread.md` directly via Gemini with `prompts/slack_rule_extraction.txt`, extracts structured declarative rules, generates vector embeddings with `text-embedding-004`, and indexes them in SQLite:
 
-| Rule ID | Dana's Input (Slack Thread) | Pipeline Encoding & Next-Sync Automation | How It Gets Corrected If Wrong / Stale |
+| Rule ID | Dana's Input (Slack Thread) | Pipeline Encoding & Automated Next Sync | How It Gets Corrected If Stale |
 | :--- | :--- | :--- | :--- |
-| `RULE_LEGACY_IS_HARBORLINE_ACTIVE` | *"Legacy = Harborline book acquired in 2019. Active clients... keep tag."* | Maps `Status='Legacy'` -> `ACTIVE`; injects `source_tags: ["acquired from Harborline"]`. | Parameterized in `KnowledgeEngine`. If Harborline terms change, updating the rule updates all downstream views on the next sync. |
-| `RULE_ADVISOR_VS_SERVICE_REP` | *"Advisor owns relationship. Service Rep is junior/ops... Don't guess if blank."* | Checks `Advisor` column first. If blank, explicitly forbids fallback to `Service Rep`; routes to Clarifications. | Configurable flag `allow_service_rep_fallback: False`. If firm policy changes, toggling to `True` reassigns automatically. |
-| `RULE_DEPARTED_STAFF_NOVAK` | *"A. Novak is Anna Novak, contractor who left... surface anything pointing to her."* | Scans `Service Rep` and meeting attendee fields for `Novak`; triggers priority reassignment flags. | Staff roster registry. Adding a departure date flag to an advisor automatically triggers reassignment sweeps. |
-| `RULE_AUM_MARKET_VALUE_ONLY` | *"Market value always, as of quarter-end. Ignore cost basis."* | Aggregates `Market_Value` only; excludes `Cost_Basis` from canonical AUM calculations. | Decoupled aggregation engine. Can compute both tax-basis and billing-AUM via distinct view models. |
-| `RULE_FOREIGN_CURRENCY_USD` | *"Convert EUR to USD for totals... note that you did it."* | Generalized multi-currency engine converting EUR/CHF to USD at quarter-end FX rates; preserves `currency_original`. | Central FX rate table (`config.fx_rates_to_usd`). Updating rate table updates valuations automatically. |
-| `RULE_DEDUPLICATE_PETROV` | *"Petrov is a known duplicate... collapse them."* | Entity resolver detects phonetic and inverted variations (`Dmitri Petrov` vs `Petrov, Dmitri`) and unifies records. | Stored in `entity_aliases.json`. If client confirms two people share a name, removing the alias splits them on next sync. |
-| `RULE_CHURNED_THOMPSON` | *"Thompson left in 2023... Mark inactive, shouldn't count toward active AUM."* | Sets `status='INACTIVE'`; excludes from active AUM rollups while retaining history. | Status rule. If Thompson re-engages, status update to `ACTIVE` restores active book reporting immediately. |
+| `RULE_LEGACY_IS_HARBORLINE_ACTIVE` | *"Legacy = Harborline book acquired in 2019... keep tag."* | Maps `Status='Legacy'` $\rightarrow$ `ACTIVE`; injects `source_tags: ["acquired from Harborline"]`. | Parameterized in `KnowledgeEngine`. Changing the rule updates downstream mapping automatically on next sync. |
+| `RULE_ADVISOR_PRECEDENCE` | *"Advisor owns relationship... Don't guess if blank."* | Prioritizes `Advisor`. Forbids fallback to junior `Service Rep`; routes unassigned clients to Clarifications. | Flag `allow_service_rep_fallback: False`. If firm policy changes, toggling to `True` reassigns automatically. |
+| `RULE_DEPARTED_STAFF_ANNA_NOVAK` | *"A. Novak is Anna Novak, contractor who left... surface her."* | Flags any service rep or attendee pointing to `Novak` for high-priority reassignment. | Advisor roster departure registry. Adding departure dates to advisors triggers reassignment flags automatically. |
+| `RULE_AUM_MARKET_VALUE_ONLY` | *"Market value always, as of quarter-end. Ignore cost basis."* | Aggregates custodian `Market_Value`; excludes `Cost_Basis` from AUM calculations. | Decoupled aggregation engine. Can calculate tax-basis or billing-AUM via separate view models. |
+| `RULE_FOREIGN_CURRENCY_USD_REPORTING` | *"Convert EUR to USD for totals... note that you did it."* | Multi-currency engine converts EUR/CHF to USD at benchmark quarter-end FX; records `currency_original`. | Central FX rate table (`config.fx_rates_to_usd`). Updating rate table updates valuations automatically. |
+| `RULE_DEDUPLICATE_DMITRI_PETROV` | *"Petrov is a known duplicate... collapse them."* | Entity resolver detects inverted variations (`Petrov, Dmitri` vs `Dmitri Petrov`) and collapses records. | Stored in knowledge base. If client confirms two distinct individuals share a name, removing rule splits them on next sync. |
+| `RULE_CHURNED_CLIENT_THOMPSON_AUM_EXCLUSION` | *"Thompson left in 2023... shouldn't count toward active AUM."* | Sets `status='INACTIVE'`, `is_active=False`, `market_value_usd=12400.0`, and `active_aum_usd=0.0`. | Status rule. If Thompson re-engages, status update to `ACTIVE` restores active billing AUM immediately. |
 
-### Rule Lifecycle & Stale Rule Mitigation:
-- **Declarative Rule Registry**: Rules are stored as versioned, declarative data structures (`KnowledgeRule`), not hardcoded procedural code.
-- **Delta-Sync Invalidation**: When an operator or client modifies an assumption in the UI or via API (`POST /api/clarifications/resolve`), the override is timestamped, persisted, and immediately triggers an incremental delta-sync that re-validates canonical constraints.
+### Rule Lifecycle & Operator Feedback:
+- **Declarative Rule Registry**: Rules are stored as versioned, declarative data structures (`KnowledgeRule`), not hardcoded procedural logic.
+- **Delta-Sync Invalidation**: When an operator resolves an ambiguity via the API or dashboard (`POST /api/clarifications/resolve`), the override is timestamped, persisted in the knowledge store, and triggers an incremental delta-sync that re-validates canonical constraints.
