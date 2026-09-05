@@ -1,108 +1,117 @@
-# Slack Message — #nevis-onboarding (Round 2 Clarifications)
+Subject: Nevis Onboarding - Round 2 Clarifications for Beaconcrest Advisors
 
-> **To**: Dana Ruiz (Head of Operations, Beaconcrest Advisors)  
-> **From**: Alex / Nevis Onboarding Team  
-> **Subject**: Round 2 Disambiguation Shortlist — Final Items for Canonical Mapping  
+Hi Dana,
 
-Hi Dana — huge thanks again for the clarifications in Round 1! We encoded all your answers into our system: the Harborline 'Legacy' lineage is preserved as active clients, Market Value is locked in as the sole AUM benchmark, Yusuf's EUR account is converted to USD, Dmitri Petrov's duplicate is collapsed, and the Thompson household is marked inactive.
+Thank you for your prompt and clear responses to our Round 1 clarifications. We really appreciate your collaboration and the detailed insights you provided, which have been invaluable in refining our data models (especially regarding Legacy = Harborline active, Market Value = AUM, EUR rate conversion, Petrov duplicate handling, and Thompson's churn status).
 
-We've now run our automated pipeline across your entire book. Out of your full book, **over 90% mapped cleanly and automatically** into the Nevis canonical model.
+We've now processed further data sets and have a few more specific items that require your expert input to ensure a precise and accurate setup for Beaconcrest. These are critical for minimizing future manual data remediation and ensuring all entities are correctly mapped in Nevis from day one.
 
-Below is the exact **shortlist of items Round 1 didn't settle** where we need your judgment rather than guessing. To make this as fast as possible for you, each item includes the background, candidate options, and a **proposed default**. You can simply reply approving the defaults or specify any adjustments in a couple of lines!
+For each item, we've outlined the **Trigger**, the supporting **Evidence**, a set of **Candidate Options**, and our **Proposed Default** for your approval. Our goal is to make this as efficient as possible for you.
 
 ---
 
-## Part 1: Primary Advisor Assignments (Blank in CRM)
-Per our Round 1 discussion, we do not guess or fall back to Service Reps. The following 4 clients have a blank Advisor field in Notion:
+### **Unresolved Items: Round 2 Clarifications**
 
-### Item 1: Unassigned Primary Advisor for Household 'Delgado' (Maria Delgado)
-- **Trigger**: Advisor field is blank in Notion CRM for 'Maria Delgado'. Canonical Rule 1 requires exactly one non-null primary advisor.
-- **Evidence**: Notion Client row for 'Maria Delgado'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'Unassigned advisor of record'.
-- **Candidate Options**:
-  - Assign to Priya Raman (San Francisco)
-  - Assign to Marcus Webb (Chicago)
-  - Assign to Elena Sokolova (Chicago)
-- **Proposed Default**: Assign to Marcus Webb (Advisor, Chicago)
+**1. [CLARIF-ADV-HH-DELGADO] Unassigned Primary Advisor for Household 'Delgado' (Maria Delgado)**
+-   **Trigger**: Advisor field is blank in Notion CRM for 'Maria Delgado'. Canonical Rule 1 requires exactly one non-null primary advisor.
+-   **Evidence**: Notion Client row for 'Maria Delgado'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'she doesn't really have a proper advisor of record assigned'.
+-   **Candidate Options**:
+    (a) Assign to Priya Raman (San Francisco)
+    (b) Assign to Marcus Webb (Chicago)
+    (c) Assign to Elena Sokolova (Chicago)
+-   **Proposed Default**: Assign to Marcus Webb (Advisor, Chicago)
 
-### Item 2: Unassigned Primary Advisor for Household 'Whitfield' (George Whitfield)
-- **Trigger**: Advisor field is blank in Notion CRM for 'George Whitfield'. Canonical Rule 1 requires exactly one non-null primary advisor.
-- **Evidence**: Notion Client row for 'George Whitfield'. Status='Legacy'. Service Rep='A. Novak'. Page note: 'None'. WARNING: Service Rep 'A. Novak' is Anna Novak who departed the firm.
-- **Candidate Options**:
-  - Assign to Priya Raman (San Francisco)
-  - Assign to Marcus Webb (Chicago)
-  - Assign to Elena Sokolova (Chicago)
-- **Proposed Default**: Assign to Priya Raman (Senior Advisor, San Francisco)
+**2. [CLARIF-ADV-HH-WHITFIELD] Unassigned Primary Advisor for Household 'Whitfield' (George Whitfield)**
+-   **Trigger**: Advisor field is blank in Notion CRM for 'George Whitfield'. Canonical Rule 1 requires exactly one non-null primary advisor.
+-   **Evidence**: Notion Client row for 'George Whitfield'. Status='Legacy'. Service Rep='A. Novak'. Page note: 'Anna was looking after him before she left the firm — needs reassigning to someone current.'. WARNING: Service Rep 'A. Novak' is Anna Novak who departed the firm.
+-   **Candidate Options**:
+    (a) Assign to Priya Raman (San Francisco)
+    (b) Assign to Marcus Webb (Chicago)
+    (c) Assign to Elena Sokolova (Chicago)
+-   **Proposed Default**: Assign to Priya Raman (Senior Advisor, San Francisco)
 
-### Item 3: Unassigned Primary Advisor for Household 'Petit' (Louis Petit)
-- **Trigger**: Advisor field is blank in Notion CRM for 'Louis Petit'. Canonical Rule 1 requires exactly one non-null primary advisor.
-- **Evidence**: Notion Client row for 'Louis Petit'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'Unassigned advisor of record'.
-- **Candidate Options**:
-  - Assign to Priya Raman (San Francisco)
-  - Assign to Marcus Webb (Chicago)
-  - Assign to Elena Sokolova (Chicago)
-- **Proposed Default**: Assign to Marcus Webb (Advisor, Chicago)
+**3. [CLARIF-ADV-HH-PETIT] Unassigned Primary Advisor for Household 'Petit' (Louis Petit)**
+-   **Trigger**: Advisor field is blank in Notion CRM for 'Louis Petit'. Canonical Rule 1 requires exactly one non-null primary advisor.
+-   **Evidence**: Notion Client row for 'Louis Petit'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'Never got a proper advisor of record assigned.'.
+-   **Candidate Options**:
+    (a) Assign to Priya Raman (San Francisco)
+    (b) Assign to Marcus Webb (Chicago)
+    (c) Assign to Elena Sokolova (Chicago)
+-   **Proposed Default**: Assign to Marcus Webb (Advisor, Chicago)
 
-### Item 4: Unassigned Primary Advisor for Household 'Vandermeer' (Joris Vandermeer)
-- **Trigger**: Advisor field is blank in Notion CRM for 'Joris Vandermeer'. Canonical Rule 1 requires exactly one non-null primary advisor.
-- **Evidence**: Notion Client row for 'Joris Vandermeer'. Status='Active'. Service Rep=''. Page note: 'None'.
-- **Candidate Options**:
-  - Assign to Priya Raman (San Francisco)
-  - Assign to Marcus Webb (Chicago)
-  - Assign to Elena Sokolova (Chicago)
-- **Proposed Default**: Assign to Priya Raman (Senior Advisor, San Francisco)
+**4. [CLARIF-ADV-HH-VANDERMEER] Unassigned Primary Advisor for Household 'Vandermeer' (Joris Vandermeer)**
+-   **Trigger**: Advisor field is blank in Notion CRM for 'Joris Vandermeer'. Canonical Rule 1 requires exactly one non-null primary advisor.
+-   **Evidence**: Notion Client row for 'Joris Vandermeer'. Status='Active'. Service Rep=''. Page note: 'None'.
+-   **Candidate Options**:
+    (a) Assign to Priya Raman (San Francisco)
+    (b) Assign to Marcus Webb (Chicago)
+    (c) Assign to Elena Sokolova (Chicago)
+-   **Proposed Default**: Assign to Priya Raman (Senior Advisor, San Francisco)
 
-## Part 2: Custodian Accounts with No Matching CRM Client
-Our custodian positions file contains 2 active investment accounts where the account holder name does not exist anywhere in your Notion CRM:
+**5. [CLARIF-ACC-CU-5010] Unmapped Custodian Account — Carlos Vasquez (CU-5010)**
+-   **Trigger**: Account 'CU-5010' at Schwab ($980,000.00 USD) has holder 'Carlos Vasquez' with no matching client or household in Notion CRM.
+-   **Evidence**: Custodian position record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 12. Custodian=Schwab, Type=Individual.
+-   **Candidate Options**:
+    (a) Add 'Carlos Vasquez' as a new Household and Client in Nevis.
+    (b) Link to an existing client under a different legal name/entity.
+    (c) Account is closed, winding down, or belongs to another firm.
+-   **Proposed Default**: Stage account under holding queue; request Dana confirm client identity or create Household 'Vasquez Household'.
 
-### Item 5: Unmapped Custodian Account — Carlos Vasquez (CU-5010)
-- **Trigger**: Account 'CU-5010' at Schwab ($980,000.00 USD) has holder 'Carlos Vasquez' with no matching client or household in Notion CRM.
-- **Evidence**: Custodian position record in /Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/custodian_positions.xlsx:Row 12. Custodian=Schwab, Type=Individual.
-- **Candidate Options**:
-  - Add 'Carlos Vasquez' as a new Household and Client in Nevis.
-  - Link to an existing client under a different legal name/entity.
-  - Account is closed, winding down, or belongs to another firm.
-- **Proposed Default**: Stage account under holding queue; request Dana confirm client identity or create Household 'Vasquez Household'.
+**6. [CLARIF-ACC-CU-6023] Unmapped Custodian Account — Bill Fitzgerald (CU-6023)**
+-   **Trigger**: Account 'CU-6023' at Schwab ($880,000.00 USD) has holder 'Bill Fitzgerald' with no matching client or household in Notion CRM.
+-   **Evidence**: Custodian position record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 35. Custodian=Schwab, Type=Individual.
+-   **Candidate Options**:
+    (a) Add 'Bill Fitzgerald' as a new Household and Client in Nevis.
+    (b) Link to an existing client under a different legal name/entity.
+    (c) Account is closed, winding down, or belongs to another firm.
+-   **Proposed Default**: Stage account under holding queue; request Dana confirm client identity or create Household 'Fitzgerald Household'.
 
-### Item 6: Unmapped Custodian Account — Priyanka Mehta (CU-6025)
-- **Trigger**: Account 'CU-6025' at Schwab ($670,000.00 USD) has holder 'Priyanka Mehta' with no matching client or household in Notion CRM.
-- **Evidence**: Custodian position record in /Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/custodian_positions.xlsx:Row 37. Custodian=Schwab, Type=Individual.
-- **Candidate Options**:
-  - Add 'Priyanka Mehta' as a new Household and Client in Nevis.
-  - Link to an existing client under a different legal name/entity.
-  - Account is closed, winding down, or belongs to another firm.
-- **Proposed Default**: Stage account under holding queue; request Dana confirm client identity or create Household 'Mehta Household'.
+**7. [CLARIF-ACC-CU-6025] Unmapped Custodian Account — Priyanka Mehta (CU-6025)**
+-   **Trigger**: Account 'CU-6025' at Schwab ($670,000.00 USD) has holder 'Priyanka Mehta' with no matching client or household in Notion CRM.
+-   **Evidence**: Custodian position record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 37. Custodian=Schwab, Type=Individual.
+-   **Candidate Options**:
+    (a) Add 'Priyanka Mehta' as a new Household and Client in Nevis.
+    (b) Link to an existing client under a different legal name/entity.
+    (c) Account is closed, winding down, or belongs to another firm.
+-   **Proposed Default**: Stage account under holding queue; request Dana confirm client identity or create Household 'Mehta Household'.
 
-## Part 3: Meeting Interaction with Unregistered Lead
-We identified 1 meeting in your Notion calendar with an organization that does not exist in your client database:
-
-### Item 7: Unmatched Interaction — 'Intro Call — Redwood Capital' (Redwood Capital)
-- **Trigger**: Meeting client 'Redwood Capital' cannot be resolved to any existing household in CRM. Canonical Rule 7 forbids minting new households from meetings.
-- **Evidence**: Meeting note: 'Referred lead — not in the CRM yet'. Attendee='James Okafor'. Date='June 8, 2025'.
-- **Candidate Options**:
-  - Lead became an active client under an unlisted name.
-  - Prospecting lead never converted; archive interaction in prospect lake.
-  - Typo/alias for an existing household.
-- **Proposed Default**: Archive interaction to prospect review queue without minting household pending Dana's confirmation.
+**8. [CLARIF-INT-M-INTRO-CALL-REDWOOD-CAPITAL] Unmatched Interaction — 'Intro Call — Redwood Capital' (Redwood Capital)**
+-   **Trigger**: Meeting client 'Redwood Capital' cannot be resolved to any existing household in CRM. Canonical Rule 7 forbids minting new households from meetings.
+-   **Evidence**: Meeting note: 'Type: Prospecting'. Attendee='James Okafor'. Date='June 8, 2025'.
+-   **Candidate Options**:
+    (a) Lead became an active client under an unlisted name.
+    (b) Prospecting lead never converted; archive interaction in prospect lake.
+    (c) Typo/alias for an existing household.
+-   **Proposed Default**: Archive interaction to prospect review queue without minting household pending Dana's confirmation.
 
 ---
 
-### How to Reply (Quick-Response Template)
-If the proposed defaults look good to you, you can literally reply with:
-```text
-Approved all proposed defaults as listed.
+To streamline your response, please use the template below. Simply indicate "Approved as proposed" if you agree with all defaults, or specify the chosen option/custom instruction for any items you'd like to adjust.
+
 ```
-Or if you want to tweak specific assignments:
-```text
-1. Delgado: Assign to Marcus Webb
-2. Whitfield: Assign to Priya Raman
-3. Petit: Assign to Marcus Webb
-4. Vandermeer: Assign to Elena Sokolova
-5. Vasquez: New client, assign to Priya Raman
-6. Mehta: New client, assign to Grace Bennett
-7. Redwood: Archive as prospecting lead
+Hi Team,
+Thanks for this clear summary.
+
+Confirmed and approved all proposed defaults: [Yes/No, or list specific CLARIF-IDs if only some]
+
+Specific adjustments:
+- CLARIF-ADV-HH-DELGADO: [Option (a), (b), (c) or custom instruction]
+- CLARIF-ADV-HH-WHITFIELD: [Option (a), (b), (c) or custom instruction]
+- CLARIF-ADV-HH-PETIT: [Option (a), (b), (c) or custom instruction]
+- CLARIF-ADV-HH-VANDERMEER: [Option (a), (b), (c) or custom instruction]
+- CLARIF-ACC-CU-5010: [Option (a), (b), (c) or custom instruction]
+- CLARIF-ACC-CU-6023: [Option (a), (b), (c) or custom instruction]
+- CLARIF-ACC-CU-6025: [Option (a), (b), (c) or custom instruction]
+- CLARIF-INT-M-INTRO-CALL-REDWOOD-CAPITAL: [Option (a), (b), (c) or custom instruction]
+
+Thanks,
+Dana
 ```
 
-Once you reply, our pipeline will apply your answers instantly and lock in the final book!
+We deeply appreciate your continued partnership in making this onboarding as smooth and accurate as possible. Please let us know if you have any questions.
 
-Best,
-Alex & The Nevis Onboarding Team
+Best regards,
+
+[Your Name]
+Lead Forward Deployed Engineer
+Nevis Onboarding Team

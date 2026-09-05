@@ -18,6 +18,7 @@ from pipeline.models import (
 from pipeline.knowledge_layer import KnowledgeEngine
 from pipeline.entity_resolver import EntityResolverAgent
 from pipeline.doc_miner import DocMinerAgent
+from config import config
 
 class CanonicalTransformer:
     def __init__(self, knowledge_engine: KnowledgeEngine):
@@ -127,6 +128,15 @@ class CanonicalTransformer:
 
         return bundle, clarifications
 
+    def _clean_source_path(self, path_str: str) -> str:
+        if not path_str:
+            return ""
+        s = str(path_str)
+        base = str(config.base_dir)
+        if s.startswith(base):
+            return s[len(base):].lstrip("/")
+        return s
+
     def _transform_advisors(self, raw_advisors: List[Dict[str, Any]]) -> Tuple[Dict[str, Advisor], Dict[str, Advisor]]:
         """Maps advisor roster records into canonical Advisor entities."""
         by_id = {}
@@ -136,7 +146,7 @@ class CanonicalTransformer:
             name = r.get("full_name", "").strip()
             role = r.get("role", "").strip()
             office = r.get("office", "").strip()
-            source_file = r.get("_source_file", "sources/advisor_roster.csv")
+            source_file = self._clean_source_path(r.get("_source_file", "sources/advisor_roster.csv"))
 
             advisor = Advisor(
                 advisor_id=adv_id,
@@ -220,7 +230,7 @@ class CanonicalTransformer:
             raw_srep = rc.get("Service Rep", "").strip()
             raw_hh = rc.get("Household", "").strip()
             client_since = rc.get("Client Since", "").strip()
-            source_file = rc.get("_source_file", "sources/notion_export/Clients.csv")
+            source_file = self._clean_source_path(rc.get("_source_file", "sources/notion_export/Clients.csv"))
             source_row = rc.get("_source_row", "")
 
             # Check notes for insights
@@ -396,7 +406,7 @@ class CanonicalTransformer:
             currency = r.get("Currency", "USD").strip()
             as_of = r.get("As_Of_Date", "2025-06-30").strip()
             custodian = r.get("Custodian", "Schwab").strip()
-            source_file = r.get("_source_file", "sources/custodian_positions.xlsx")
+            source_file = self._clean_source_path(r.get("_source_file", "sources/custodian_positions.xlsx"))
             source_row = r.get("_source_row", "")
 
             # Resolve Account to Household & Client
@@ -499,7 +509,7 @@ class CanonicalTransformer:
             raw_type = rm.get("Type", "").strip()
             raw_date = rm.get("Date", "").strip()
             attendee = rm.get("Attendee", "").strip()
-            source_file = rm.get("_source_file", "sources/notion_export/Meetings.csv")
+            source_file = self._clean_source_path(rm.get("_source_file", "sources/notion_export/Meetings.csv"))
             source_row = rm.get("_source_row", "")
 
             notes = meeting_notes.get(meet_name, {})

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """
-==============================================================================
-Nevis Forward Deployed Engineer (FDE) Agentic Pipeline Runner
-==============================================================================
-Runs the end-to-end ingestion, agentic entity resolution, canonical mapping,
-adversarial validation, and artifact generation in a single command.
+Nevis Forward Deployed Engineer (FDE) Agentic Pipeline Runner.
+Runs the end-to-end ingestion, ReAct agentic entity resolution, canonical mapping,
+reflective validation, and artifact generation in a single command.
 
 Usage:
     python3 run_pipeline.py
@@ -38,25 +36,25 @@ from pipeline.readers import (
 from pipeline.validator import SourceValidationSuite
 from pipeline.knowledge_layer import KnowledgeEngine
 from pipeline.transformer import CanonicalTransformer
-from pipeline.auditor import CanonicalAuditor
-from pipeline.output_generator import OutputGenerator
+from pipeline.auditor import AuditorAgent
+from pipeline.output_generator import ClarificationAgent
 from pipeline.llm_client import llm_client
+
 
 def run_pipeline() -> int:
     start_time = time.time()
     print("=" * 80)
     print("NEVIS AGENTIC DATA ONBOARDING PIPELINE")
-    print("Client: Beaconcrest Advisors (RIA Onboarding - Round 2)")
+    print(f"Target Firm: {config.sources_dir.parent.name}")
     print("=" * 80)
 
     # 1. Environment & Provider Status
-    print(f"\n[1/6] Initializing AI & Heuristics Engine...")
-    print(f"  - Active Provider Mode: {llm_client.provider.upper()}")
-    if llm_client.provider == "gemini":
-        print(f"  - Model: {config.gemini_model} (Live Google GenAI active)")
+    print("\n[1/6] Initializing AI & Heuristics Engine...")
+    if llm_client.is_available:
+        print(f"  - Model: {config.gemini_model} (Google GenAI live)")
+        print(f"  - Encoding Endpoint: {config.embedding_model} (Google text embeddings)")
     else:
-        print("  - Mode: Calibrated Deterministic Agent Fallback (Zero-Key Offline Guarantee)")
-        print("  - Tip: To run live Gemini reasoning, set GEMINI_API_KEY=<your_key> in .env")
+        print("  - WARNING: GEMINI_API_KEY is not configured. Live LLM reasoning requires an API key in .env.")
 
     # 2. Ingestion
     print(f"\n[2/6] Ingesting Source Datasets from: {config.sources_dir}...")
@@ -67,7 +65,7 @@ def run_pipeline() -> int:
         meetings = read_notion_meetings(config.sources_dir / "notion_export")
         slack_raw = read_slack_thread(config.sources_dir / "ops_slack_thread.md")
     except Exception as e:
-        print(f"[FATAL ERROR] Ingestion failed: {e}")
+        print(f"[ERROR] Ingestion failed: {e}")
         return 1
 
     print(f"  ✓ Ingested {len(advisors)} advisors from advisor_roster.csv")
@@ -77,10 +75,10 @@ def run_pipeline() -> int:
     print(f"  ✓ Ingested Round 1 Slack thread ({len(slack_raw.splitlines())} lines)")
 
     # 3. Pre-Flight Validation
-    print(f"\n[3/6] Running Pre-Flight Source Sanity Audit...")
+    print("\n[3/6] Running Pre-Flight Source Sanity Checks...")
     validation_report = SourceValidationSuite.audit_sources(advisors, clients, meetings, custodian)
     if not validation_report.is_valid:
-        print(f"[ERROR] Pre-flight validation failed:")
+        print("[ERROR] Pre-flight validation failed:")
         for err in validation_report.errors:
             print(f"  ✗ {err}")
         return 1
@@ -89,21 +87,21 @@ def run_pipeline() -> int:
         print(f"  ! [Notice] {warn}")
 
     # 4. Agentic Transformation & Entity Resolution
-    print(f"\n[4/6] Executing Agentic Mapping & Entity Disambiguation...")
+    print("\n[4/6] Executing Agentic Mapping & Entity Disambiguation...")
     ke = KnowledgeEngine()
     transformer = CanonicalTransformer(ke)
     bundle, clarifs = transformer.transform_all(advisors, clients, meetings, custodian)
 
     print(f"  ✓ Synthesized {len(bundle.households)} Households")
-    print(f"  ✓ Mapped {len(bundle.clients)} Clients (Dmitri Petrov duplicate collapsed)")
-    print(f"  ✓ Mapped {len(bundle.accounts)} Accounts (EUR & CHF currencies normalized to USD)")
+    print(f"  ✓ Mapped {len(bundle.clients)} Clients")
+    print(f"  ✓ Mapped {len(bundle.accounts)} Accounts")
     print(f"  ✓ Mapped {len(bundle.advisors)} Advisors")
-    print(f"  ✓ Mapped {len(bundle.interactions)} Interactions (Bob Chen resolved to Robert Chen)")
+    print(f"  ✓ Mapped {len(bundle.interactions)} Interactions")
     print(f"  ✓ Flagged {len(clarifs)} Scoped Clarifications for Dana Ruiz")
 
-    # 5. Adversarial Post-Mapping Validation (The 7 Nevis Canonical Rules)
-    print(f"\n[5/6] Executing Adversarial Canonical Rules Audit...")
-    audit_report = CanonicalAuditor.audit_canonical_bundle(bundle)
+    # 5. Canonical Rules Audit & Plausibility Validation
+    print("\n[5/6] Executing Canonical Rules & Plausibility Audit...")
+    audit_report = AuditorAgent.audit_canonical_bundle(bundle, run_semantic_check=True)
     print(audit_report.summary())
     if not audit_report.is_valid:
         print("\n[FAIL] Canonical mapping violated constraints!")
@@ -114,22 +112,24 @@ def run_pipeline() -> int:
     canonical_file = config.outputs_dir / "canonical_output.json"
     clarif_file = config.outputs_dir / "clarifications_round2.md"
 
-    OutputGenerator.write_canonical_json(bundle, canonical_file)
-    OutputGenerator.write_clarifications_markdown(clarifs, clarif_file)
+    ClarificationAgent.write_canonical_json(bundle, canonical_file)
+    ClarificationAgent.write_clarifications_markdown(clarifs, clarif_file)
 
     print(f"  ✓ Saved: {canonical_file} ({canonical_file.stat().st_size:,} bytes)")
     print(f"  ✓ Saved: {clarif_file} ({clarif_file.stat().st_size:,} bytes)")
 
     # Execution Summary
     duration = time.time() - start_time
-    total_aum = sum(h.market_value_usd for h in bundle.households if h.market_value_usd is not None)
+    total_mv = bundle.metadata.get("total_market_value_usd", 0.0)
+    active_aum = bundle.metadata.get("total_active_aum_usd", 0.0)
 
     print("\n" + "=" * 80)
     print("PIPELINE EXECUTION COMPLETE (SUCCESS)")
     print("=" * 80)
     print(f"Execution Time:           {duration:.2f} seconds")
     print(f"Committed Households:     {len(bundle.households)}")
-    print(f"Total Canonical AUM:      ${total_aum:,.2f} USD")
+    print(f"Total Market Value:       ${total_mv:,.2f} USD")
+    print(f"Active Billing AUM:       ${active_aum:,.2f} USD (Excludes inactive/churned)")
     print(f"Committed Clients:        {len(bundle.clients)}")
     print(f"Committed Accounts:       {len(bundle.accounts)}")
     print(f"Round 2 Clarification Qs: {len(clarifs)} scoped items for Dana Ruiz")
@@ -137,6 +137,7 @@ def run_pipeline() -> int:
     print(f"                          outputs/clarifications_round2.md")
     print("=" * 80)
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(run_pipeline())
