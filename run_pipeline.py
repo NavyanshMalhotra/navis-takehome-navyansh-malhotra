@@ -15,7 +15,17 @@ import time
 from pathlib import Path
 
 # Add project root to sys.path
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+BASE_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(BASE_DIR))
+
+# Auto-delegate to .venv if current interpreter lacks dependencies
+venv_python = BASE_DIR / ".venv" / "bin" / "python3"
+if sys.executable != str(venv_python) and venv_python.exists():
+    try:
+        from google import genai
+    except ImportError:
+        import os
+        os.execv(str(venv_python), [str(venv_python)] + sys.argv)
 
 from config import config
 from pipeline.readers import (
