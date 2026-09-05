@@ -1,10 +1,12 @@
 """
 Nevis Canonical Data Model and Provenance Lineage Schemas.
-Implements the 5 canonical entities with field-level audit trails.
+Implements the 5 canonical entities with field-level audit trails
+and dual-metric AUM tracking (total market value vs active AUM).
 """
 
 from dataclasses import dataclass, field, asdict
 from typing import List, Optional, Dict, Any
+
 
 @dataclass
 class FieldProvenance:
@@ -19,24 +21,36 @@ class FieldProvenance:
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
+
+class ModelDictMixin:
+    """Base mixin providing unified serialization with nested FieldProvenance support."""
+
+    def to_dict(self) -> Dict[str, Any]:
+        res = asdict(self)
+        if hasattr(self, "_provenance"):
+            res["_provenance"] = {
+                k: v.to_dict() if hasattr(v, "to_dict") else v
+                for k, v in getattr(self, "_provenance", {}).items()
+            }
+        return res
+
+
 @dataclass
-class Household:
+class Household(ModelDictMixin):
     household_id: str
     household_name: str
     primary_advisor_id: str
     status: str  # ACTIVE | INACTIVE | PROSPECT
     as_of_date: str
     source_tags: List[str] = field(default_factory=list)
-    market_value_usd: Optional[float] = None  # Aggregated household AUM
+    market_value_usd: Optional[float] = None  # Total aggregated custodian balance
+    is_active: bool = True  # True if status == 'ACTIVE'
+    active_aum_usd: Optional[float] = None  # Active billing AUM (0 for inactive households)
     _provenance: Dict[str, FieldProvenance] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        res = asdict(self)
-        res["_provenance"] = {k: v.to_dict() if isinstance(v, FieldProvenance) else v for k, v in self._provenance.items()}
-        return res
 
 @dataclass
-class Client:
+class Client(ModelDictMixin):
     client_id: str
     household_id: str
     first_name: str
@@ -45,13 +59,9 @@ class Client:
     source_tags: List[str] = field(default_factory=list)
     _provenance: Dict[str, FieldProvenance] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        res = asdict(self)
-        res["_provenance"] = {k: v.to_dict() if isinstance(v, FieldProvenance) else v for k, v in self._provenance.items()}
-        return res
 
 @dataclass
-class Account:
+class Account(ModelDictMixin):
     account_id: str
     household_id: str
     account_type: str  # INDIVIDUAL | JOINT | TRUST | IRA | ROTH_IRA | CORPORATE | OTHER
@@ -62,26 +72,18 @@ class Account:
     account_holder_raw: str = ""
     _provenance: Dict[str, FieldProvenance] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        res = asdict(self)
-        res["_provenance"] = {k: v.to_dict() if isinstance(v, FieldProvenance) else v for k, v in self._provenance.items()}
-        return res
 
 @dataclass
-class Advisor:
+class Advisor(ModelDictMixin):
     advisor_id: str
     full_name: str
     role: str
     office: str = ""
     _provenance: Dict[str, FieldProvenance] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        res = asdict(self)
-        res["_provenance"] = {k: v.to_dict() if isinstance(v, FieldProvenance) else v for k, v in self._provenance.items()}
-        return res
 
 @dataclass
-class Interaction:
+class Interaction(ModelDictMixin):
     interaction_id: str
     household_id: str
     interaction_type: str  # REVIEW | PROSPECTING | ONBOARDING | OTHER
@@ -91,10 +93,6 @@ class Interaction:
     attendee_raw: str = ""
     _provenance: Dict[str, FieldProvenance] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        res = asdict(self)
-        res["_provenance"] = {k: v.to_dict() if isinstance(v, FieldProvenance) else v for k, v in self._provenance.items()}
-        return res
 
 @dataclass
 class ClarificationItem:
@@ -112,6 +110,7 @@ class ClarificationItem:
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
+
 
 @dataclass
 class CanonicalOutputBundle:

@@ -41,6 +41,13 @@ class CanonicalTransformer:
         Executes the end-to-end transformation.
         Returns: (canonical_bundle, clarifications_list)
         """
+        # Extract prevailing As_Of_Date dynamically from custodian positions
+        prevailing_as_of = "2025-06-30"
+        for r in raw_custodian:
+            if r.get("As_Of_Date"):
+                prevailing_as_of = str(r["As_Of_Date"]).strip()
+                break
+
         clarifications: List[ClarificationItem] = []
 
         # 1. Mine unstructured notes from Markdown pages
@@ -52,7 +59,7 @@ class CanonicalTransformer:
 
         # 3. Transform Clients and Synthesize Households
         households, clients, unassigned_advisor_clarifs = self._transform_households_and_clients(
-            raw_clients, client_notes, advisors_by_id, advisors_by_name
+            raw_clients, client_notes, advisors_by_id, advisors_by_name, prevailing_as_of
         )
         clarifications.extend(unassigned_advisor_clarifs)
 
@@ -67,7 +74,7 @@ class CanonicalTransformer:
         clarifications.extend(account_clarifs)
 
         # Compute Household AUM (Sum of accounts' market_value_usd, or None if no accounts)
-        # Enforces Rule 2 & Rule 3 (Unknown != zero)
+        # Enforces Rule 2, Rule 3 (Unknown != zero), and Dana's Active AUM Rule
         hh_account_totals: Dict[str, float] = {}
         hh_has_accounts: Set[str] = set()
         for acc in accounts:
@@ -77,17 +84,24 @@ class CanonicalTransformer:
                     hh_account_totals[acc.household_id] = hh_account_totals.get(acc.household_id, 0.0) + acc.market_value_usd
 
         for hh in households:
+            hh.is_active = (hh.status == "ACTIVE")
             if hh.household_id in hh_has_accounts:
                 hh.market_value_usd = round(hh_account_totals.get(hh.household_id, 0.0), 2)
+                # Dual-metric: active_aum_usd is market_value_usd if active, else 0.0
+                hh.active_aum_usd = hh.market_value_usd if hh.is_active else 0.0
             else:
                 # Rule 3: Unknown != zero. Household with no known accounts has AUM null, not 0.
                 hh.market_value_usd = None
+                hh.active_aum_usd = None
 
         # 5. Transform Interactions (Meetings)
         interactions, interaction_clarifs = self._transform_interactions(
             raw_meetings, meeting_notes, clients, households, advisors_by_name
         )
         clarifications.extend(interaction_clarifs)
+
+        total_mv = round(sum(h.market_value_usd for h in households if h.market_value_usd is not None), 2)
+        total_active = round(sum(h.active_aum_usd for h in households if h.active_aum_usd is not None), 2)
 
         # Bundle committed canonical entities
         bundle = CanonicalOutputBundle(
@@ -99,12 +113,15 @@ class CanonicalTransformer:
             metadata={
                 "target_firm": "Beaconcrest Advisors",
                 "onboarding_stage": "Round 2",
+                "as_of_date": prevailing_as_of,
                 "total_households": len(households),
                 "total_clients": len(clients),
                 "total_accounts": len(accounts),
                 "total_advisors": len(advisors_by_id),
                 "total_interactions": len(interactions),
                 "total_clarifications_flagged": len(clarifications),
+                "total_market_value_usd": total_mv,
+                "total_active_aum_usd": total_active,
             }
         )
 
@@ -159,7 +176,8 @@ class CanonicalTransformer:
         raw_clients: List[Dict[str, Any]],
         client_notes: Dict[str, Dict[str, Any]],
         advisors_by_id: Dict[str, Advisor],
-        advisors_by_name: Dict[str, Advisor]
+        advisors_by_name: Dict[str, Advisor],
+        prevailing_as_of: str = "2025-06-30"
     ) -> Tuple[List[Household], List[Client], List[ClarificationItem]]:
         """
         Synthesizes households, normalizes client records, collapses duplicates,
@@ -214,7 +232,8 @@ class CanonicalTransformer:
             hh_resolution_reason = "From Notion CSV 'Household' column"
             if not hh_name and insights.get("household_hint"):
                 hh_name = insights["household_hint"]
-                hh_resolution_reason = f"Derived from Notion markdown page body: '{insights['raw_snippets'][0]}'"
+                snip = insights["raw_snippets"][0] if insights.get("raw_snippets") else "CRM dossier notes"
+                hh_resolution_reason = f"Derived from Notion markdown page body: '{snip}'"
             elif not hh_name:
                 hh_name = f"{last_name} Household"
                 hh_resolution_reason = f"Synthesized from client surname '{last_name}'"
@@ -272,7 +291,7 @@ class CanonicalTransformer:
                     household_name=hh_name if "Household" in hh_name else f"{hh_name} Household",
                     primary_advisor_id=advisor_id,
                     status=status,
-                    as_of_date="2025-06-30",
+                    as_of_date=prevailing_as_of,
                     source_tags=source_tags,
                     _provenance={
                         "household_id": FieldProvenance(
@@ -307,10 +326,13 @@ class CanonicalTransformer:
                 seen_households[hh_slug] = hh
                 households.append(hh)
 
-            # 6. Determine Client Role (PRIMARY vs SPOUSE vs OTHER)
+            # 6. Determine Client Role (PRIMARY vs SPOUSE vs SIGNER vs OTHER)
             role = "PRIMARY"
             role_reasoning = "Primary contact for household"
-            if insights.get("spouse_of"):
+            if insights.get("role") and insights["role"] not in ("PRIMARY", ""):
+                role = insights["role"]
+                role_reasoning = f"Derived from Notion notes: role is '{role}'"
+            elif insights.get("spouse_of"):
                 role = "SPOUSE"
                 role_reasoning = f"Identified as spouse/wife of '{insights['spouse_of']}' from Notion page body"
 

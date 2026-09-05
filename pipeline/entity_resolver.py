@@ -309,6 +309,16 @@ class EntityResolverAgent:
             is_orphan=True,
         )
 
+    def resolve_account_to_household(
+        self,
+        account: Dict[str, Any],
+        households: List[Dict[str, Any]],
+        clients: List[Dict[str, Any]],
+        doc_miner_insights: Optional[Dict[str, Dict[str, Any]]] = None,
+    ) -> EntityResolutionResult:
+        """Compatibility alias for resolve_account_holder."""
+        return self.resolve_account_holder(account, clients, households, doc_miner_insights)
+
     def _normalize_account_type(self, raw_type: str) -> str:
         """Maps raw custodian account types to canonical enum."""
         t = raw_type.upper().strip() if raw_type else "INDIVIDUAL"
