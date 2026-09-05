@@ -56,7 +56,7 @@ Our custodian positions file contains 2 active investment accounts where the acc
 
 ### Item 5: Unmapped Custodian Account — Carlos Vasquez (CU-5010)
 - **Trigger**: Account 'CU-5010' at Schwab ($980,000.00 USD) has holder 'Carlos Vasquez' with no matching client or household in Notion CRM.
-- **Evidence**: Custodian position record in /Users/navyansh/Desktop/Development/Nevis take home/nevis-fde-hometask/sources/custodian_positions.xlsx:Row 12. Custodian=Schwab, Type=Individual.
+- **Evidence**: Custodian position record in /Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/custodian_positions.xlsx:Row 12. Custodian=Schwab, Type=Individual.
 - **Candidate Options**:
   - Add 'Carlos Vasquez' as a new Household and Client in Nevis.
   - Link to an existing client under a different legal name/entity.
@@ -65,7 +65,7 @@ Our custodian positions file contains 2 active investment accounts where the acc
 
 ### Item 6: Unmapped Custodian Account — Priyanka Mehta (CU-6025)
 - **Trigger**: Account 'CU-6025' at Schwab ($670,000.00 USD) has holder 'Priyanka Mehta' with no matching client or household in Notion CRM.
-- **Evidence**: Custodian position record in /Users/navyansh/Desktop/Development/Nevis take home/nevis-fde-hometask/sources/custodian_positions.xlsx:Row 37. Custodian=Schwab, Type=Individual.
+- **Evidence**: Custodian position record in /Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/custodian_positions.xlsx:Row 37. Custodian=Schwab, Type=Individual.
 - **Candidate Options**:
   - Add 'Priyanka Mehta' as a new Household and Client in Nevis.
   - Link to an existing client under a different legal name/entity.
