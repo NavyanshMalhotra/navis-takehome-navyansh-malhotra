@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nevis — Agentic Wealth Onboarding Platform</title>
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-left">
+      <div class="logo-group">
+        <div class="logo-mark">N</div>
+        <div class="logo-text">
+          <span class="brand-name">NEVIS</span>
+          <span class="platform-label">FORWARD DEPLOYED PLATFORM</span>
+        </div>
+      </div>
+      <div class="tenant-badge">
+        <span class="tenant-dot"></span>
+        <span class="tenant-name">Beaconcrest Advisors (RIA)</span>
+        <span class="stage-tag">Round 2 Loop</span>
+      </div>
+    </div>
+    
+    <div class="nav-right">
+      <div id="pipelineStatusBadge" class="status-indicator ready">
+        <span class="pulse-dot"></span>
+        <span id="statusText">System Ready (Canonical 100%)</span>
+      </div>
+      <button id="runPipelineBtn" class="btn btn-primary" onclick="triggerPipelineRun()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span>Execute Sync Pipeline</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="dashboard-container">
+    <!-- KPI Metric Cards Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card glassmorphism">
+        <div class="kpi-header">
+          <span class="kpi-label">TOTAL CANONICAL AUM</span>
+          <span class="kpi-icon aum-icon">USD</span>
+        </div>
+        <div class="kpi-value" id="kpiAum">$67,295,625</div>
+        <div class="kpi-subtext">Sum of verified accounts in USD (Rule 2)</div>
+      </div>
+
+      <div class="kpi-card glassmorphism">
+        <div class="kpi-header">
+          <span class="kpi-label">COMMITTED HOUSEHOLDS</span>
+          <span class="kpi-icon hh-icon">HH</span>
+        </div>
+        <div class="kpi-value" id="kpiHouseholds">52</div>
+        <div class="kpi-subtext">Unified client relationship groups</div>
+      </div>
+
+      <div class="kpi-card glassmorphism">
+        <div class="kpi-header">
+          <span class="kpi-label">COMMITTED ACCOUNTS</span>
+          <span class="kpi-icon acc-icon">ACC</span>
+        </div>
+        <div class="kpi-value" id="kpiAccounts">51</div>
+        <div class="kpi-subtext">EUR & CHF normalized to USD (Rule 5)</div>
+      </div>
+
+      <div class="kpi-card glassmorphism">
+        <div class="kpi-header">
+          <span class="kpi-label">COMMITTED CLIENTS</span>
+          <span class="kpi-icon cli-icon">CLI</span>
+        </div>
+        <div class="kpi-value" id="kpiClients">56</div>
+        <div class="kpi-subtext">Petrov duplicate collapsed per Dana</div>
+      </div>
+
+      <div class="kpi-card glassmorphism highlight-card">
+        <div class="kpi-header">
+          <span class="kpi-label">HITL CLARIFICATIONS</span>
+          <span class="kpi-badge" id="kpiClarifBadge">7 ITEMS</span>
+        </div>
+        <div class="kpi-value" id="kpiClarif">7</div>
+        <div class="kpi-subtext">Scoped for Dana Ruiz (Round 2)</div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="switchTab('canonical')">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        Canonical Book Explorer
+      </button>
+      <button class="tab-btn" onclick="switchTab('triage')">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        HITL Clarifications Triage
+        <span class="tab-counter" id="triageCounter">7</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('slack')">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        Round 2 Slack Message
+      </button>
+      <button class="tab-btn" onclick="switchTab('knowledge')">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        Knowledge & Business Rules
+      </button>
+      <button class="tab-btn" onclick="switchTab('audit')">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        Canonical Rules Audit
+      </button>
+    </div>
+
+    <!-- TAB 1: CANONICAL EXPLORER -->
+    <section id="tab-canonical" class="tab-content active">
+      <div class="explorer-controls">
+        <div class="entity-filter-buttons">
+          <button class="sub-filter-btn active" onclick="filterEntityType('households')">Households (<span id="countHh">52</span>)</button>
+          <button class="sub-filter-btn" onclick="filterEntityType('clients')">Clients (<span id="countCli">56</span>)</button>
+          <button class="sub-filter-btn" onclick="filterEntityType('accounts')">Accounts (<span id="countAcc">51</span>)</button>
+          <button class="sub-filter-btn" onclick="filterEntityType('advisors')">Advisors (<span id="countAdv">7</span>)</button>
+          <button class="sub-filter-btn" onclick="filterEntityType('interactions')">Interactions (<span id="countInt">17</span>)</button>
+        </div>
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="canonicalSearch" placeholder="Search by name, ID, custodian, advisor, tag..." oninput="handleCanonicalSearch()">
+        </div>
+      </div>
+
+      <!-- Data Table Card -->
+      <div class="table-card glassmorphism">
+        <div class="table-responsive">
+          <table class="data-table" id="canonicalTable">
+            <thead id="canonicalThead">
+              <!-- Dynamically rendered headers -->
+            </thead>
+            <tbody id="canonicalTbody">
+              <!-- Dynamically rendered rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: HITL TRIAGE QUEUE -->
+    <section id="tab-triage" class="tab-content">
+      <div class="triage-intro-banner glassmorphism">
+        <div>
+          <h3>Human-in-the-Loop Clarification Queue (Dana Ruiz — Round 2)</h3>
+          <p>These items require client or operator judgment. Selecting an action updates the canonical book immediately and updates provenance.</p>
+        </div>
+        <button class="btn btn-outline" onclick="copySlackMessage()">Copy All to Slack</button>
+      </div>
+      <div class="clarifications-list" id="triageList">
+        <!-- Dynamic Clarification Cards -->
+      </div>
+    </section>
+
+    <!-- TAB 3: SLACK MESSAGE PREVIEW -->
+    <section id="tab-slack" class="tab-content">
+      <div class="slack-preview-card glassmorphism">
+        <div class="slack-header">
+          <div class="slack-channel-badge">#nevis-onboarding</div>
+          <button class="btn btn-primary" onclick="copySlackMessage()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Slack Message</span>
+          </button>
+        </div>
+        <div class="slack-body">
+          <pre id="slackMarkdownContent">Loading Slack export...</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: KNOWLEDGE & RULES -->
+    <section id="tab-knowledge" class="tab-content">
+      <div class="knowledge-intro glassmorphism">
+        <h3>Declarative Knowledge Layer & Extracted Business Rules</h3>
+        <p>Operational logic extracted from Dana Ruiz's Round 1 onboarding answers, automatically encoded and reusable across future syncs.</p>
+      </div>
+      <div class="rules-grid" id="rulesGrid">
+        <!-- Dynamic Rules Cards -->
+      </div>
+    </section>
+
+    <!-- TAB 5: CANONICAL RULES AUDIT -->
+    <section id="tab-audit" class="tab-content">
+      <div class="audit-summary-card glassmorphism">
+        <div class="audit-badge-banner">
+          <span class="audit-status-badge pass">100% CANONICAL COMPLIANCE (7/7 RULES PASSED)</span>
+        </div>
+        <div class="rules-audit-list" id="auditRulesList">
+          <!-- Dynamic Audit Rules List -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Provenance Slide-Out Drawer -->
+  <div id="provenanceBackdrop" class="drawer-backdrop" onclick="closeProvenanceDrawer()"></div>
+  <aside id="provenanceDrawer" class="provenance-drawer">
+    <div class="drawer-header">
+      <div>
+        <h3 id="drawerTitle">Record Provenance Lineage</h3>
+        <span class="drawer-subtitle" id="drawerSubtitle">Entity ID: ...</span>
+      </div>
+      <button class="close-btn" onclick="closeProvenanceDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" id="drawerBody">
+      <!-- Dynamic provenance fields list -->
+    </div>
+  </aside>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast">Action completed successfully</div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
