@@ -15,5 +15,6 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local Environment Overrides (keep .env.example tracked)
+# Local Environment & Secrets (keep .env.example tracked)
+.env
 .env.local
