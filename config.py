@@ -27,11 +27,16 @@ class PipelineConfig:
     
     # Secrets (Loaded from .env)
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "").strip().strip("'\"")
+    google_cloud_project: str = os.getenv("GOOGLE_CLOUD_PROJECT", "291630468248")
+    google_cloud_location: str = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     
-    # Model Selection (Non-secret architectural configuration)
-    # Defaulting to Google's standard multi-modal agent model
+    # Model Selection
     gemini_model: str = "gemini-2.5-flash"
     gemini_fallback_models: tuple = ("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash")
+    embedding_model: str = "text-embedding-004"
+    
+    # Local Knowledge & Vector Cache
+    knowledge_db_path: Path = outputs_dir / "knowledge_store.db"
     
     # Pipeline Confidence Routing Thresholds
     # >= 0.85: Auto-committed to canonical output
