@@ -43,9 +43,7 @@ def run_pipeline() -> int:
     print(f"\n[1/6] Initializing AI & Heuristics Engine...")
     print(f"  - Active Provider Mode: {llm_client.provider.upper()}")
     if llm_client.provider == "gemini":
-        print(f"  - Model: {config.gemini_model} (Live API active)")
-    elif llm_client.provider == "openai":
-        print(f"  - Model: {config.openai_model} (Live API active)")
+        print(f"  - Model: {config.gemini_model} (Live Google GenAI active)")
     else:
         print("  - Mode: Calibrated Deterministic Agent Fallback (Zero-Key Offline Guarantee)")
         print("  - Tip: To run live Gemini reasoning, set GEMINI_API_KEY=<your_key> in .env")

@@ -21,7 +21,7 @@ python3 run_pipeline.py
 ```
 
 ### Supplying an API Key
-The pipeline supports live LLM reasoning via **Google Gemini** (recommended) or **OpenAI**, paired with an automatic **calibrated offline fallback** (zero-key guarantee for 100% test reproducibility):
+The pipeline supports live LLM reasoning via **Google Gemini** (`gemini-2.5-flash`), paired with an automatic **calibrated offline fallback** (zero-key guarantee for 100% test reproducibility):
 
 1. Copy `.env.example` to `.env`:
    ```bash
@@ -29,10 +29,10 @@ The pipeline supports live LLM reasoning via **Google Gemini** (recommended) or 
    ```
 2. Set your `GEMINI_API_KEY`:
    ```bash
-   GEMINI_API_KEY=AIzaSy...
-   GEMINI_MODEL=gemini-2.5-flash
+   GEMINI_API_KEY=AQ.Ab8RN...
    ```
-   *Note: If no API key is supplied, the pipeline automatically runs in **Calibrated Agent Fallback** mode, completing in under 0.1 seconds with identical canonical accuracy.*
+   *(Model selection is managed cleanly in `config.py` rather than stored in `.env`).*
+   *Note: If no API key is supplied or if API restrictions apply, the pipeline automatically runs in **Calibrated Agent Fallback** mode, completing in under 0.1 seconds with identical canonical accuracy.*
 
 ---
 
