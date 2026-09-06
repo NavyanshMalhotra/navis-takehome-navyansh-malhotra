@@ -195,9 +195,9 @@ class EntityResolverAgent(BaseAgent):
                 matched_household_id=matched_client.get("household_id"),
                 matched_client_id=matched_client.get("client_id"),
                 resolved_account_type=self._normalize_account_type(source_acc_type),
-                confidence=1.00,
+                confidence=0.98,
                 resolution_method="EXACT_NAME_MATCH",
-                reasoning=f"Exact match on client name '{holder}'."
+                reasoning=f"Exact match on client name '{holder}' across custodian and CRM systems."
             )
 
         # 2. Inverted Name Normalization ('Last, First' -> 'First Last')
@@ -212,7 +212,7 @@ class EntityResolverAgent(BaseAgent):
                     matched_household_id=matched_client.get("household_id"),
                     matched_client_id=matched_client.get("client_id"),
                     resolved_account_type=self._normalize_account_type(source_acc_type),
-                    confidence=0.98,
+                    confidence=0.96,
                     resolution_method="INVERTED_NAME_NORMALIZATION",
                     reasoning=f"Inverted name '{holder}' normalized to '{first} {last}'."
                 )

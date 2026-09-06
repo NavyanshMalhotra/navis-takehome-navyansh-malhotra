@@ -82,21 +82,65 @@ class CanonicalTransformerAgent(BaseAgent):
             # Rollup AUM per household
             hh_account_totals: Dict[str, float] = {}
             hh_has_accounts: Set[str] = set()
+            hh_account_confs: Dict[str, List[float]] = {}
             for acc in accounts:
                 if acc.household_id in household_by_id:
                     hh_has_accounts.add(acc.household_id)
                     if acc.market_value_usd is not None:
                         hh_account_totals[acc.household_id] = hh_account_totals.get(acc.household_id, 0.0) + acc.market_value_usd
+                    acc_prov = acc._provenance.get("household_id")
+                    acc_conf = acc_prov.confidence if acc_prov else 1.0
+                    hh_account_confs.setdefault(acc.household_id, []).append(acc_conf)
 
             for hh in households:
                 hh.is_active = (hh.status == "ACTIVE")
                 if hh.household_id in hh_has_accounts:
                     hh.market_value_usd = round(hh_account_totals.get(hh.household_id, 0.0), 2)
                     hh.active_aum_usd = hh.market_value_usd if hh.is_active else 0.0
+
+                    confs = hh_account_confs.get(hh.household_id, [1.0])
+                    rollup_conf = round(min(confs), 2) if confs else 1.0
+
+                    hh._provenance["market_value_usd"] = FieldProvenance(
+                        source_file="sources/custodian_positions.xlsx",
+                        source_location="Aggregated Account Holdings",
+                        source_raw_value=hh.market_value_usd,
+                        method="AUM_ROLLUP",
+                        confidence=rollup_conf,
+                        rule_or_agent="RULE_HOUSEHOLD_AUM_AGGREGATION",
+                        reasoning=f"Aggregated market value of {len(confs)} constituent accounts from custodian balances."
+                    )
+                    hh._provenance["active_aum_usd"] = FieldProvenance(
+                        source_file="sources/notion_export/Clients.csv",
+                        source_location="Active Household Filter",
+                        source_raw_value=hh.active_aum_usd,
+                        method="RULE_8_BILLING_FILTER",
+                        confidence=rollup_conf if hh.is_active else 1.0,
+                        rule_or_agent="RULE_ACTIVE_HOUSEHOLD_BILLING_AUM",
+                        reasoning="Active household billing AUM included per Rule 8." if hh.is_active else "Excluded from active billing AUM per Rule 8 (household is INACTIVE)."
+                    )
                 else:
                     # Rule 3: Unknown != zero
                     hh.market_value_usd = None
                     hh.active_aum_usd = None
+                    hh._provenance["market_value_usd"] = FieldProvenance(
+                        source_file="sources/custodian_positions.xlsx",
+                        source_location="Custodian Holdings",
+                        source_raw_value=None,
+                        method="RULE_ENGINE",
+                        confidence=1.0,
+                        rule_or_agent="RULE_UNKNOWN_NOT_ZERO",
+                        reasoning="Households with no accounts in custodian records hold null AUM per Rule 3."
+                    )
+                    hh._provenance["active_aum_usd"] = FieldProvenance(
+                        source_file="sources/notion_export/Clients.csv",
+                        source_location="Active Household Filter",
+                        source_raw_value=None,
+                        method="RULE_ENGINE",
+                        confidence=1.0,
+                        rule_or_agent="RULE_UNKNOWN_NOT_ZERO",
+                        reasoning="Null active AUM for household with no custodian accounts."
+                    )
 
             # 5. Transform Interactions (Meetings)
             interactions, interaction_clarifs = self._transform_interactions(
@@ -167,6 +211,22 @@ class CanonicalTransformerAgent(BaseAgent):
                         source_file=source_file,
                         source_location="Row",
                         source_raw_value=name,
+                        method="DETERMINISTIC_DIRECT",
+                        confidence=1.0,
+                        rule_or_agent="ROSTER_INGESTION"
+                    ),
+                    "role": FieldProvenance(
+                        source_file=source_file,
+                        source_location="Row",
+                        source_raw_value=role,
+                        method="DETERMINISTIC_DIRECT",
+                        confidence=1.0,
+                        rule_or_agent="ROSTER_INGESTION"
+                    ),
+                    "office": FieldProvenance(
+                        source_file=source_file,
+                        source_location="Row",
+                        source_raw_value=office,
                         method="DETERMINISTIC_DIRECT",
                         confidence=1.0,
                         rule_or_agent="ROSTER_INGESTION"
@@ -322,9 +382,18 @@ class CanonicalTransformerAgent(BaseAgent):
                             source_location=f"Row {source_row}",
                             source_raw_value=raw_hh,
                             method="SYNTHESIZED_SLUG",
-                            confidence=1.0,
+                            confidence=0.98 if raw_hh else 0.95,
                             rule_or_agent="HOUSEHOLD_SYNTHESIS",
                             reasoning=hh_resolution_reason
+                        ),
+                        "household_name": FieldProvenance(
+                            source_file=source_file,
+                            source_location=f"Row {source_row}",
+                            source_raw_value=raw_hh or name,
+                            method="NORMALIZATION",
+                            confidence=0.98,
+                            rule_or_agent="HOUSEHOLD_SYNTHESIS",
+                            reasoning=f"Household display name normalized from '{raw_hh or name}'."
                         ),
                         "primary_advisor_id": FieldProvenance(
                             source_file=source_file,
@@ -340,7 +409,7 @@ class CanonicalTransformerAgent(BaseAgent):
                             source_location=f"Row {source_row}",
                             source_raw_value=raw_status,
                             method="RULE_ENGINE" if status_rule else "DETERMINISTIC_DIRECT",
-                            confidence=1.0,
+                            confidence=1.0 if status_rule else 0.95,
                             rule_or_agent=status_rule.rule_id if status_rule else "STATUS_NORMALIZATION",
                             reasoning=status_rule.description if status_rule else "Standard status mapping"
                         )
@@ -376,6 +445,33 @@ class CanonicalTransformerAgent(BaseAgent):
                         confidence=1.0,
                         rule_or_agent="CLIENT_INGESTION"
                     ),
+                    "first_name": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=name,
+                        method="NAME_TOKENIZATION",
+                        confidence=0.98,
+                        rule_or_agent="CLIENT_INGESTION",
+                        reasoning=f"First name '{first_name}' extracted from full name '{name}'."
+                    ),
+                    "last_name": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=name,
+                        method="NAME_TOKENIZATION",
+                        confidence=0.98,
+                        rule_or_agent="CLIENT_INGESTION",
+                        reasoning=f"Last name '{last_name}' extracted from full name '{name}'."
+                    ),
+                    "household_id": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=raw_hh or name,
+                        method="HOUSEHOLD_ASSOCIATION",
+                        confidence=0.98 if raw_hh else 0.95,
+                        rule_or_agent="HOUSEHOLD_SYNTHESIS",
+                        reasoning=f"Associated to household '{hh_slug}' per CRM hierarchy."
+                    ),
                     "role": FieldProvenance(
                         source_file=rc.get("_page_file") or source_file,
                         source_location="Page Body / Row",
@@ -384,6 +480,15 @@ class CanonicalTransformerAgent(BaseAgent):
                         confidence=0.98 if insights.get("spouse_of") else 0.90,
                         rule_or_agent="ROLE_ASSIGNMENT",
                         reasoning=role_reasoning
+                    ),
+                    "status": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=rc.get("Status", ""),
+                        method="CRM_STATUS_INGESTION",
+                        confidence=1.0,
+                        rule_or_agent="CLIENT_INGESTION",
+                        reasoning=f"Status '{rc.get('Status', '')}' direct from Notion CRM."
                     )
                 }
             )
@@ -474,12 +579,38 @@ class CanonicalTransformerAgent(BaseAgent):
                         rule_or_agent="ENTITY_RESOLVER_AGENT",
                         reasoning=res.reasoning
                     ),
+                    "account_type": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=raw_acc_type,
+                        method="TYPE_NORMALIZATION",
+                        confidence=0.96,
+                        rule_or_agent="ACCOUNT_NORMALIZATION",
+                        reasoning=f"Normalized '{raw_acc_type}' to canonical '{res.resolved_account_type}'."
+                    ),
+                    "custodian": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=custodian,
+                        method="DETERMINISTIC_DIRECT",
+                        confidence=1.0,
+                        rule_or_agent="CUSTODIAN_INGESTION",
+                        reasoning=f"Custodian identified from position report header."
+                    ),
+                    "currency_original": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=currency,
+                        method="DETERMINISTIC_DIRECT",
+                        confidence=1.0,
+                        rule_or_agent="CUSTODIAN_INGESTION"
+                    ),
                     "market_value_usd": FieldProvenance(
                         source_file=source_file,
                         source_location=f"Row {source_row}",
                         source_raw_value=raw_mv,
                         method="CURRENCY_CONVERSION" if currency != "USD" else "DETERMINISTIC_DIRECT",
-                        confidence=1.0,
+                        confidence=0.98 if currency != "USD" else 1.0,
                         rule_or_agent="RULE_FOREIGN_CURRENCY_USD_REPORTING" if currency != "USD" else "DIRECT_BALANCE",
                         reasoning=fx_reason if currency != "USD" else "USD market value direct from custodian"
                     )
@@ -587,9 +718,36 @@ class CanonicalTransformerAgent(BaseAgent):
                         source_location=f"Row {source_row}",
                         source_raw_value=raw_client,
                         method="ALIAS_RESOLVER" if notes.get("client_alias") else "CLIENT_HOUSEHOLD_FK",
-                        confidence=0.98 if notes.get("client_alias") else 1.0,
+                        confidence=0.98 if notes.get("client_alias") else 0.95,
                         rule_or_agent="INTERACTION_HOUSEHOLD_RESOLVER",
                         reasoning=f"Resolved '{raw_client}' -> '{notes.get('client_alias')}' -> Household {matched_hh_id}" if notes.get("client_alias") else f"Direct link to household {matched_hh_id}"
+                    ),
+                    "interaction_type": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=raw_type,
+                        method="TYPE_CLASSIFICATION",
+                        confidence=0.95,
+                        rule_or_agent="INTERACTION_INGESTION",
+                        reasoning=f"Classified raw type '{raw_type}' to '{norm_type}'."
+                    ),
+                    "interaction_date": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=raw_date,
+                        method="DATE_PARSING",
+                        confidence=1.0,
+                        rule_or_agent="INTERACTION_INGESTION",
+                        reasoning=f"Parsed '{raw_date}' to ISO format '{standard_date}'."
+                    ),
+                    "advisor_id": FieldProvenance(
+                        source_file=source_file,
+                        source_location=f"Row {source_row}",
+                        source_raw_value=attendee,
+                        method="ROSTER_LOOKUP" if adv_id else "UNASSIGNED_ATTENDEE",
+                        confidence=1.0 if adv_id else 0.50,
+                        rule_or_agent="ROSTER_LINKING",
+                        reasoning=f"Matched attendee '{attendee}' to advisor '{adv_id}'." if adv_id else f"Attendee '{attendee}' not found in advisor roster."
                     )
                 }
             )

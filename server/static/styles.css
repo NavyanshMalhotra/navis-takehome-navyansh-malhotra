@@ -796,10 +796,35 @@ code {
 .citation-conf {
   font-size: 11px;
   font-weight: 600;
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: 3px;
+  display: inline-block;
+}
+
+.citation-conf.conf-high, .conf-pill.conf-high {
   background: var(--ink-green-subtle);
   color: var(--ink-green);
+  border: 1px solid rgba(45, 106, 79, 0.25);
+}
+
+.citation-conf.conf-medium, .conf-pill.conf-medium {
+  background: var(--ink-amber-subtle);
+  color: var(--ink-amber);
+  border: 1px solid rgba(181, 101, 29, 0.25);
+}
+
+.citation-conf.conf-low, .conf-pill.conf-low {
+  background: var(--ink-red-subtle);
+  color: var(--ink-red);
+  border: 1px solid rgba(193, 18, 31, 0.25);
+}
+
+.conf-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
 }
 
 .citation-details {

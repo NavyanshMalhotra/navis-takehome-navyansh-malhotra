@@ -199,6 +199,12 @@ async function triggerPipelineRun() {
 // ------------------------------------------------------------------------------
 // Renderers
 // ------------------------------------------------------------------------------
+function formatConfPill(conf) {
+  if (typeof conf !== 'number') return '<span class="conf-pill conf-high">1.00</span>';
+  const confClass = conf >= 0.95 ? 'conf-high' : (conf >= 0.80 ? 'conf-medium' : 'conf-low');
+  return `<span class="conf-pill ${confClass}">${conf.toFixed(2)}</span>`;
+}
+
 function renderCanonicalTable() {
   const thead = document.getElementById('canonicalThead');
   const tbody = document.getElementById('canonicalTbody');
@@ -212,7 +218,7 @@ function renderCanonicalTable() {
   }
 
   if (items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:32px;">No matching records found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:32px;">No matching records found.</td></tr>`;
     return;
   }
 
@@ -227,22 +233,27 @@ function renderCanonicalTable() {
         <th>Household Name</th>
         <th style="width: 120px;">Primary Advisor</th>
         <th style="width: 90px;">Status</th>
-        <th class="num-col" style="width: 150px;">Market Value (USD)</th>
-        <th class="num-col" style="width: 150px;">Active AUM (USD)</th>
+        <th class="num-col" style="width: 140px;">Market Value (USD)</th>
+        <th class="num-col" style="width: 140px;">Active AUM (USD)</th>
+        <th style="width: 80px; text-align: center;">Conf</th>
         <th>Source Tags</th>
       </tr>
     `;
-    tbody.innerHTML = items.map(h => `
-      <tr onclick="openProvenanceDrawer('Household', '${h.household_id}')">
-        <td><code>${h.household_id}</code></td>
-        <td style="font-weight:600;">${h.household_name}</td>
-        <td><code>${h.primary_advisor_id || 'unassigned'}</code></td>
-        <td><span class="tag tag-${(h.status || 'active').toLowerCase()}">${h.status}</span></td>
-        <td class="num-col">${fmtUsd(h.market_value_usd)}</td>
-        <td class="num-col" style="font-weight:600; color:${h.is_active ? 'var(--text-primary)' : 'var(--ink-amber)'};">${fmtUsd(h.active_aum_usd)}</td>
-        <td>${(h.source_tags || []).map(t => `<span class="tag tag-meta">${t}</span>`).join('')}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = items.map(h => {
+      const hhConf = h._provenance?.market_value_usd?.confidence ?? (h.primary_advisor_id === 'ADV-PENDING-CLARIFICATION' ? 0.40 : 0.98);
+      return `
+        <tr onclick="openProvenanceDrawer('Household', '${h.household_id}')">
+          <td><code>${h.household_id}</code></td>
+          <td style="font-weight:600;">${h.household_name}</td>
+          <td><code>${h.primary_advisor_id || 'unassigned'}</code></td>
+          <td><span class="tag tag-${(h.status || 'active').toLowerCase()}">${h.status}</span></td>
+          <td class="num-col">${fmtUsd(h.market_value_usd)}</td>
+          <td class="num-col" style="font-weight:600; color:${h.is_active ? 'var(--text-primary)' : 'var(--ink-amber)'};">${fmtUsd(h.active_aum_usd)}</td>
+          <td style="text-align:center;">${formatConfPill(hhConf)}</td>
+          <td>${(h.source_tags || []).map(t => `<span class="tag tag-meta">${t}</span>`).join('')}</td>
+        </tr>
+      `;
+    }).join('');
   } else if (currentEntity === 'clients') {
     thead.innerHTML = `
       <tr>
@@ -250,43 +261,53 @@ function renderCanonicalTable() {
         <th>Full Legal Name</th>
         <th style="width: 140px;">Household ID</th>
         <th style="width: 100px;">Role</th>
+        <th style="width: 80px; text-align: center;">Role Conf</th>
         <th style="width: 100px;">Status</th>
         <th>Source Tags</th>
       </tr>
     `;
-    tbody.innerHTML = items.map(c => `
-      <tr onclick="openProvenanceDrawer('Client', '${c.client_id}')">
-        <td><code>${c.client_id}</code></td>
-        <td style="font-weight:600;">${c.first_name} ${c.last_name}</td>
-        <td><code>${c.household_id}</code></td>
-        <td><span class="tag tag-meta">${c.role}</span></td>
-        <td><span class="tag tag-${(c.status || 'active').toLowerCase()}">${c.status}</span></td>
-        <td>${(c.source_tags || []).map(t => `<span class="tag tag-meta">${t}</span>`).join('')}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = items.map(c => {
+      const cliConf = c._provenance?.role?.confidence ?? 0.98;
+      return `
+        <tr onclick="openProvenanceDrawer('Client', '${c.client_id}')">
+          <td><code>${c.client_id}</code></td>
+          <td style="font-weight:600;">${c.first_name} ${c.last_name}</td>
+          <td><code>${c.household_id}</code></td>
+          <td><span class="tag tag-meta">${c.role}</span></td>
+          <td style="text-align:center;">${formatConfPill(cliConf)}</td>
+          <td><span class="tag tag-${(c.status || 'active').toLowerCase()}">${c.status}</span></td>
+          <td>${(c.source_tags || []).map(t => `<span class="tag tag-meta">${t}</span>`).join('')}</td>
+        </tr>
+      `;
+    }).join('');
   } else if (currentEntity === 'accounts') {
     thead.innerHTML = `
       <tr>
-        <th style="width: 140px;">Account ID</th>
+        <th style="width: 130px;">Account ID</th>
         <th>Account Title / Holder</th>
         <th style="width: 140px;">Household ID</th>
+        <th style="width: 80px; text-align: center;">Match Conf</th>
         <th style="width: 100px;">Type</th>
-        <th class="num-col" style="width: 150px;">Market Value (USD)</th>
-        <th style="width: 90px;">Currency</th>
-        <th style="width: 120px;">Custodian</th>
+        <th class="num-col" style="width: 140px;">Market Value (USD)</th>
+        <th style="width: 80px;">Currency</th>
+        <th style="width: 110px;">Custodian</th>
       </tr>
     `;
-    tbody.innerHTML = items.map(a => `
-      <tr onclick="openProvenanceDrawer('Account', '${a.account_id}')">
-        <td><code>${a.account_id}</code></td>
-        <td style="font-weight:600;">${a.account_holder_raw}</td>
-        <td><code>${a.household_id}</code></td>
-        <td><span class="tag tag-meta">${a.account_type}</span></td>
-        <td class="num-col" style="font-weight:600;">${fmtUsd(a.market_value_usd)}</td>
-        <td><code>${a.currency_original}</code> ${a.currency_original !== 'USD' ? '<span class="tag tag-prospect">FX</span>' : ''}</td>
-        <td>${a.custodian}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = items.map(a => {
+      const accConf = a._provenance?.household_id?.confidence ?? 0.98;
+      return `
+        <tr onclick="openProvenanceDrawer('Account', '${a.account_id}')">
+          <td><code>${a.account_id}</code></td>
+          <td style="font-weight:600;">${a.account_holder_raw}</td>
+          <td><code>${a.household_id}</code></td>
+          <td style="text-align:center;">${formatConfPill(accConf)}</td>
+          <td><span class="tag tag-meta">${a.account_type}</span></td>
+          <td class="num-col" style="font-weight:600;">${fmtUsd(a.market_value_usd)}</td>
+          <td><code>${a.currency_original}</code> ${a.currency_original !== 'USD' ? '<span class="tag tag-prospect">FX</span>' : ''}</td>
+          <td>${a.custodian}</td>
+        </tr>
+      `;
+    }).join('');
   } else if (currentEntity === 'advisors') {
     thead.innerHTML = `
       <tr>
@@ -294,6 +315,7 @@ function renderCanonicalTable() {
         <th>Full Name</th>
         <th style="width: 180px;">Role</th>
         <th>Office Location</th>
+        <th style="width: 80px; text-align: center;">Conf</th>
       </tr>
     `;
     tbody.innerHTML = items.map(adv => `
@@ -302,6 +324,7 @@ function renderCanonicalTable() {
         <td style="font-weight:600;">${adv.full_name}</td>
         <td>${adv.role}</td>
         <td>${adv.office}</td>
+        <td style="text-align:center;">${formatConfPill(1.00)}</td>
       </tr>
     `).join('');
   } else if (currentEntity === 'interactions') {
@@ -309,22 +332,27 @@ function renderCanonicalTable() {
       <tr>
         <th style="width: 140px;">Interaction ID</th>
         <th style="width: 140px;">Household ID</th>
+        <th style="width: 80px; text-align: center;">Link Conf</th>
         <th style="width: 100px;">Date</th>
         <th style="width: 100px;">Type</th>
         <th style="width: 120px;">Advisor</th>
         <th>Summary / Context</th>
       </tr>
     `;
-    tbody.innerHTML = items.map(i => `
-      <tr onclick="openProvenanceDrawer('Interaction', '${i.interaction_id}')">
-        <td><code>${i.interaction_id}</code></td>
-        <td><code>${i.household_id}</code></td>
-        <td>${i.interaction_date}</td>
-        <td><span class="tag tag-meta">${i.interaction_type}</span></td>
-        <td><code>${i.advisor_id || 'unassigned'}</code></td>
-        <td>${i.summary || 'N/A'}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = items.map(i => {
+      const intConf = i._provenance?.household_id?.confidence ?? 0.98;
+      return `
+        <tr onclick="openProvenanceDrawer('Interaction', '${i.interaction_id}')">
+          <td><code>${i.interaction_id}</code></td>
+          <td><code>${i.household_id}</code></td>
+          <td style="text-align:center;">${formatConfPill(intConf)}</td>
+          <td>${i.interaction_date}</td>
+          <td><span class="tag tag-meta">${i.interaction_type}</span></td>
+          <td><code>${i.advisor_id || 'unassigned'}</code></td>
+          <td>${i.summary || 'N/A'}</td>
+        </tr>
+      `;
+    }).join('');
   }
 }
 
@@ -497,12 +525,13 @@ function openProvenanceDrawer(entityType, entityId) {
     body.innerHTML = `<p style="color:var(--text-muted);">No field-level provenance recorded for this record.</p>`;
   } else {
     body.innerHTML = Object.entries(provDict).map(([fieldName, prov]) => {
-      const conf = prov.confidence || 1.0;
+      const conf = typeof prov.confidence === 'number' ? prov.confidence : 1.0;
+      const confClass = conf >= 0.95 ? 'conf-high' : (conf >= 0.80 ? 'conf-medium' : 'conf-low');
       return `
         <div class="citation-card">
           <div class="citation-head">
             <span class="citation-field">${fieldName}</span>
-            <span class="citation-conf">Conf: ${conf.toFixed(2)}</span>
+            <span class="citation-conf ${confClass}">Conf: ${conf.toFixed(2)}</span>
           </div>
           <div class="citation-details">
             <div><b>Source File:</b> <code>${prov.source_file}</code></div>
