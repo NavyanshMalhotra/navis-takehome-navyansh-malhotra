@@ -57,74 +57,75 @@ class DocMinerAgent:
         if not notes_to_mine:
             return extracted_by_client
 
-        # Batch all non-empty client notes into a single structured LLM reasoning call
-        batch_prompt = (
-            "Analyze the following client CRM dossier notes. For each client, extract:\n"
-            "- spouse_of: Full name of spouse if indicated (e.g. 'Robert Chen', 'Sarah Thompson')\n"
-            "- role: Canonical role if implied ('PRIMARY', 'SPOUSE', 'SIGNER', 'TRUSTEE', 'DEPENDENT')\n"
-            "- household_hint: Likely household name if specified\n"
-            "- holds_joint_account: boolean (true if notes mention holding a joint account)\n"
-            "- foreign_currency_hint: Currency code if foreign holdings mentioned ('EUR', 'CHF')\n"
-            "- acquisition_notes: Mentions of Harborline or legacy acquisition\n"
-            "- advisor_notes: Notes indicating unassigned advisor of record\n"
-            "- affiliated_entities: List of legal entities or LLCs (e.g. ['Nakamura Holdings LLC'])\n"
-            "- ops_flag: Any operational warning or note flagged for ops\n"
-            "- raw_snippets: List of exact quoted sentences/clauses supporting the extractions\n\n"
-            "Input Client Notes:\n"
-        )
-        for item in notes_to_mine:
-            batch_prompt += f"\n--- Client: {item['name']} (File: {item['file']}) ---\n{item['body']}\n"
+        # Process client notes in manageable batches (15 per batch) to prevent gateway timeouts
+        batch_size = 15
+        for i in range(0, len(notes_to_mine), batch_size):
+            chunk = notes_to_mine[i : i + batch_size]
+            batch_prompt = (
+                "Analyze the following client CRM dossier notes. For each client, extract:\n"
+                "- spouse_of: Full name of spouse if indicated (e.g. 'Robert Chen', 'Sarah Thompson')\n"
+                "- role: Canonical role if implied ('PRIMARY', 'SPOUSE', 'SIGNER', 'TRUSTEE', 'DEPENDENT')\n"
+                "- household_hint: Likely household name if specified\n"
+                "- holds_joint_account: boolean (true if notes mention holding a joint account)\n"
+                "- foreign_currency_hint: Currency code if foreign holdings mentioned ('EUR', 'CHF')\n"
+                "- acquisition_notes: Mentions of Harborline or legacy acquisition\n"
+                "- advisor_notes: Notes indicating unassigned advisor of record\n"
+                "- affiliated_entities: List of legal entities or LLCs (e.g. ['Nakamura Holdings LLC'])\n"
+                "- ops_flag: Any operational warning or note flagged for ops\n"
+                "- raw_snippets: List of exact quoted sentences/clauses supporting the extractions\n\n"
+                "Input Client Notes:\n"
+            )
+            for item in chunk:
+                batch_prompt += f"\n--- Client: {item['name']} (File: {item['file']}) ---\n{item['body']}\n"
 
-        batch_prompt += (
-            "\nOutput a JSON object with key 'clients' mapping client names to their extracted insight dictionary."
-        )
+            batch_prompt += (
+                "\nOutput a JSON object with key 'clients' mapping client names to their extracted insight dictionary."
+            )
 
-        try:
-            logger.info("Calling Gemini to mine %d client dossier notes...", len(notes_to_mine))
-            resp = llm_client.generate_json(self.system_prompt, batch_prompt)
-            llm_results = resp.get("clients", {})
+            try:
+                logger.info("Calling Gemini to mine client dossier batch %d/%d...", (i // batch_size) + 1, (len(notes_to_mine) + batch_size - 1) // batch_size)
+                resp = llm_client.generate_json(self.system_prompt, batch_prompt)
+                llm_results = resp.get("clients", {})
 
-            for name, insights_data in llm_results.items():
-                # Match by exact or partial name
-                target_key = next((k for k in extracted_by_client if k.lower() == name.lower()), None)
-                if not target_key:
-                    target_key = next((k for k in extracted_by_client if name.lower() in k.lower() or k.lower() in name.lower()), None)
+                for name, insights_data in llm_results.items():
+                    target_key = next((k for k in extracted_by_client if k.lower() == name.lower()), None)
+                    if not target_key:
+                        target_key = next((k for k in extracted_by_client if name.lower() in k.lower() or k.lower() in name.lower()), None)
 
-                def _clean_val(val: Any) -> Any:
-                    if isinstance(val, dict):
-                        return val.get("value", "")
-                    if isinstance(val, list):
-                        return [_clean_val(item) for item in val]
-                    return val
+                    def _clean_val(val: Any) -> Any:
+                        if isinstance(val, dict):
+                            return val.get("value", "")
+                        if isinstance(val, list):
+                            return [_clean_val(item) for item in val]
+                        return val
 
-                if target_key:
-                    base = extracted_by_client[target_key]
-                    if insights_data.get("spouse_of"):
-                        base["spouse_of"] = _clean_val(insights_data["spouse_of"])
-                    if insights_data.get("role"):
-                        base["role"] = str(_clean_val(insights_data["role"])).upper()
-                    if insights_data.get("household_hint"):
-                        base["household_hint"] = _clean_val(insights_data["household_hint"])
-                    if insights_data.get("holds_joint_account") is not None:
-                        base["holds_joint_account"] = bool(_clean_val(insights_data["holds_joint_account"]))
-                    if insights_data.get("foreign_currency_hint"):
-                        base["foreign_currency_hint"] = _clean_val(insights_data["foreign_currency_hint"])
-                    if insights_data.get("acquisition_notes"):
-                        base["acquisition_notes"] = _clean_val(insights_data["acquisition_notes"])
-                    if insights_data.get("advisor_notes"):
-                        base["advisor_notes"] = _clean_val(insights_data["advisor_notes"])
-                    if insights_data.get("affiliated_entities"):
-                        entities = _clean_val(insights_data["affiliated_entities"])
-                        base["affiliated_entities"] = [e for e in entities if e] if isinstance(entities, list) else [entities]
-                    if insights_data.get("ops_flag"):
-                        base["ops_flag"] = _clean_val(insights_data["ops_flag"])
-                    if insights_data.get("raw_snippets"):
-                        snippets = _clean_val(insights_data["raw_snippets"])
-                        base["raw_snippets"] = [s for s in snippets if s] if isinstance(snippets, list) else [snippets]
+                    if target_key:
+                        base = extracted_by_client[target_key]
+                        if insights_data.get("spouse_of"):
+                            base["spouse_of"] = _clean_val(insights_data["spouse_of"])
+                        if insights_data.get("role"):
+                            base["role"] = str(_clean_val(insights_data["role"])).upper()
+                        if insights_data.get("household_hint"):
+                            base["household_hint"] = _clean_val(insights_data["household_hint"])
+                        if insights_data.get("holds_joint_account") is not None:
+                            base["holds_joint_account"] = bool(_clean_val(insights_data["holds_joint_account"]))
+                        if insights_data.get("foreign_currency_hint"):
+                            base["foreign_currency_hint"] = _clean_val(insights_data["foreign_currency_hint"])
+                        if insights_data.get("acquisition_notes"):
+                            base["acquisition_notes"] = _clean_val(insights_data["acquisition_notes"])
+                        if insights_data.get("advisor_notes"):
+                            base["advisor_notes"] = _clean_val(insights_data["advisor_notes"])
+                        if insights_data.get("affiliated_entities"):
+                            entities = _clean_val(insights_data["affiliated_entities"])
+                            base["affiliated_entities"] = [e for e in entities if e] if isinstance(entities, list) else [entities]
+                        if insights_data.get("ops_flag"):
+                            base["ops_flag"] = _clean_val(insights_data["ops_flag"])
+                        if insights_data.get("raw_snippets"):
+                            snippets = _clean_val(insights_data["raw_snippets"])
+                            base["raw_snippets"] = [s for s in snippets if s] if isinstance(snippets, list) else [snippets]
 
-        except Exception as e:
-            logger.error("LLM client note mining failed: %s", e)
-            raise
+            except Exception as e:
+                logger.warning("Batch LLM client note mining failed for chunk %d: %s", (i // batch_size) + 1, e)
 
         return extracted_by_client
 

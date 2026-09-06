@@ -4,7 +4,7 @@
     "category": "UNASSIGNED_ADVISOR",
     "title": "Unassigned Primary Advisor for Household 'Delgado' (Maria Delgado)",
     "trigger": "Advisor field is blank in Notion CRM for 'Maria Delgado'. Canonical Rule 1 requires exactly one non-null primary advisor.",
-    "evidence": "Notion Client row for 'Maria Delgado'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'doesn't really have a proper advisor of record assigned'.",
+    "evidence": "Notion Client row for 'Maria Delgado'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'she doesn't really have a proper advisor of record assigned — should sort that out.'.",
     "candidate_options": [
       "Assign to Priya Raman (San Francisco)",
       "Assign to Marcus Webb (Chicago)",
@@ -21,7 +21,7 @@
     "category": "UNASSIGNED_ADVISOR",
     "title": "Unassigned Primary Advisor for Household 'Whitfield' (George Whitfield)",
     "trigger": "Advisor field is blank in Notion CRM for 'George Whitfield'. Canonical Rule 1 requires exactly one non-null primary advisor.",
-    "evidence": "Notion Client row for 'George Whitfield'. Status='Legacy'. Service Rep='A. Novak'. Page note: 'Anna was looking after him before she left the firm — needs reassigning to someone current.'. WARNING: Service Rep 'A. Novak' is Anna Novak who departed the firm.",
+    "evidence": "Notion Client row for 'George Whitfield'. Status='Legacy'. Service Rep='A. Novak'. Page note: 'Anna was looking after him before she left the firm — needs reassigning to someone current.'.",
     "candidate_options": [
       "Assign to Priya Raman (San Francisco)",
       "Assign to Marcus Webb (Chicago)",
@@ -130,9 +130,9 @@
       "Typo/alias for an existing household."
     ],
     "proposed_default": "Archive interaction to prospect review queue without minting household pending Dana's confirmation.",
-    "confidence": 0.3,
+    "confidence": 0.2,
     "status": "PENDING_REVIEW",
-    "entity_ref": "M-INTRO-CALL-REDWOOD-CAPITAL",
+    "entity_ref": "Intro Call — Redwood Capital",
     "resolved_value": null
   }
 ]

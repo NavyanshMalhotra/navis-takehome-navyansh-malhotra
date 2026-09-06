@@ -31,22 +31,27 @@ class LLMClient:
     def __init__(self):
         self._client = None
         self._is_vertex = False
+        self._key_blocked = False
 
         if config.gemini_api_key:
             try:
                 from google import genai
+                from google.genai import types
+                http_opts = types.HttpOptions(timeout=15000)
+
                 if config.gemini_api_key.startswith("AQ."):
                     self._client = genai.Client(
                         vertexai=True,
                         api_key=config.gemini_api_key,
                         project=config.google_cloud_project,
                         location=config.google_cloud_location,
+                        http_options=http_opts,
                     )
                     self._is_vertex = True
                     logger.info("Initialized Google GenAI Vertex client (Project: %s, Location: %s)",
                                 config.google_cloud_project, config.google_cloud_location)
                 else:
-                    self._client = genai.Client(api_key=config.gemini_api_key)
+                    self._client = genai.Client(api_key=config.gemini_api_key, http_options=http_opts)
                     logger.info("Initialized Google GenAI client with model: %s", config.gemini_model)
             except Exception as e:
                 logger.error("Failed to initialize Google GenAI client: %s", e)
@@ -56,15 +61,25 @@ class LLMClient:
 
     @property
     def is_available(self) -> bool:
-        """Returns True if the client is initialized with an active API key."""
-        return self._client is not None
+        """Returns True if the client is initialized with an active, unblocked API key."""
+        return self._client is not None and not self._key_blocked
 
     def _ensure_available(self):
         if not self.is_available:
             raise APIKeyMissingError(
-                "GEMINI_API_KEY is not configured or failed initialization. "
-                "Supply a valid Google Gemini API key in .env to run agentic reasoning."
+                "GEMINI_API_KEY is not configured or lacks permission for generativelanguage.googleapis.com. "
+                "Supply an unrestricted Google Gemini API key in .env to run live agentic reasoning."
             )
+
+    def _get_default_config(self):
+        try:
+            from google.genai import types
+            return types.GenerateContentConfig(
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+            )
+        except Exception:
+            return None
 
     def generate_json(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         """
@@ -74,12 +89,14 @@ class LLMClient:
 
         full_prompt = f"{system_prompt}\n\nUser Request:\n{user_prompt}\n\nRespond with valid JSON only."
         last_error = None
+        gen_config = self._get_default_config()
 
         for model_name in config.gemini_fallback_models:
             try:
                 response = self._client.models.generate_content(
                     model=model_name,
                     contents=full_prompt,
+                    config=gen_config,
                 )
                 text = response.text.strip()
                 # Strip markdown code fences if present
@@ -92,8 +109,17 @@ class LLMClient:
                     text = "\n".join(lines).strip()
                 return json.loads(text)
             except Exception as e:
+                err_str = str(e)
                 logger.debug("Gemini call with %s failed: %s", model_name, e)
                 last_error = e
+                # Fast-fail on API key restrictions or permission errors to avoid stalling
+                if "API_KEY_SERVICE_BLOCKED" in err_str or "PERMISSION_DENIED" in err_str or "API_KEY_INVALID" in err_str:
+                    logger.warning(
+                        "Gemini API key is blocked or lacks permission for Generative Language API (API_KEY_SERVICE_BLOCKED). "
+                        "Fast-failing to deterministic fallback engine."
+                    )
+                    self._key_blocked = True
+                    break
                 continue
 
         raise LLMExecutionError(f"All Gemini models failed. Last error: {last_error}")
@@ -106,17 +132,27 @@ class LLMClient:
 
         contents = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
         last_error = None
+        gen_config = self._get_default_config()
 
         for model_name in config.gemini_fallback_models:
             try:
                 response = self._client.models.generate_content(
                     model=model_name,
                     contents=contents,
+                    config=gen_config,
                 )
                 return response.text.strip()
             except Exception as e:
+                err_str = str(e)
                 logger.debug("Gemini text call with %s failed: %s", model_name, e)
                 last_error = e
+                if "API_KEY_SERVICE_BLOCKED" in err_str or "PERMISSION_DENIED" in err_str or "API_KEY_INVALID" in err_str:
+                    logger.warning(
+                        "Gemini API key is blocked or lacks permission for Generative Language API (API_KEY_SERVICE_BLOCKED). "
+                        "Fast-failing to deterministic fallback engine."
+                    )
+                    self._key_blocked = True
+                    break
                 continue
 
         raise LLMExecutionError(f"All Gemini models failed for text generation. Last error: {last_error}")
