@@ -66,6 +66,13 @@ class TestPipelineEndToEnd(unittest.TestCase):
         db_path = config.outputs_dir / "knowledge_store.db"
         self.assertTrue(db_path.exists())
 
+        # 4. Check OpenTelemetry traces recorded by swarm
+        from pipeline.telemetry import telemetry
+        summary = telemetry.get_summary()
+        self.assertGreater(summary["total_spans"], 0, "Telemetry must record execution spans")
+        self.assertGreater(summary["agent_invocations"], 0, "Telemetry must record agent invocations")
+        self.assertIn("CanonicalTransformerAgent", summary["active_agents"])
+
 
 if __name__ == "__main__":
     unittest.main()

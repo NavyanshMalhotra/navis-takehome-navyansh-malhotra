@@ -2712,7 +2712,7 @@
           "method": "LLM_DOC_MINING",
           "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
+          "reasoning": "Identified as spouse/wife of 'Bill Thompson' from Notion page body"
         }
       }
     },
@@ -2985,7 +2985,7 @@
       "household_id": "HH-ABRAMSON",
       "first_name": "Rachel",
       "last_name": "Abramson",
-      "role": "PRIMARY",
+      "role": "SPOUSE",
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
@@ -3006,10 +3006,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Rachel Abramson 9b089ad6bf202bf936f3c33e84cce4ef.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Rachel Abramson",
-          "method": "DEFAULT_PRIMARY",
-          "confidence": 0.9,
+          "method": "LLM_DOC_MINING",
+          "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Primary contact for household"
+          "reasoning": "Identified as spouse/wife of 'Daniel Abramson' from Notion page body"
         }
       }
     },
@@ -3018,7 +3018,7 @@
       "household_id": "HH-ABRAMSON",
       "first_name": "Daniel",
       "last_name": "Abramson",
-      "role": "PRIMARY",
+      "role": "SPOUSE",
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 0.85%",
@@ -3039,10 +3039,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Daniel Abramson 4ba2faf64b4de6f737705ff14e071684.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Daniel Abramson",
-          "method": "DEFAULT_PRIMARY",
-          "confidence": 0.9,
+          "method": "LLM_DOC_MINING",
+          "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Primary contact for household"
+          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
       }
     },
@@ -3150,7 +3150,7 @@
       "household_id": "HH-SULLIVAN",
       "first_name": "Megan",
       "last_name": "Sullivan",
-      "role": "PRIMARY",
+      "role": "SPOUSE",
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
@@ -3171,10 +3171,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Megan Sullivan aa1edf11a0770e2af49acb0bf2ba8041.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Megan Sullivan",
-          "method": "DEFAULT_PRIMARY",
-          "confidence": 0.9,
+          "method": "LLM_DOC_MINING",
+          "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Primary contact for household"
+          "reasoning": "Identified as spouse/wife of 'Tom Sullivan' from Notion page body"
         }
       }
     },
@@ -3183,7 +3183,7 @@
       "household_id": "HH-SULLIVAN",
       "first_name": "Tom",
       "last_name": "Sullivan",
-      "role": "PRIMARY",
+      "role": "SPOUSE",
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
@@ -3204,10 +3204,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Tom Sullivan 6fb0ea7fb3fdb4f3e66e121db61fa8cc.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Tom Sullivan",
-          "method": "DEFAULT_PRIMARY",
-          "confidence": 0.9,
+          "method": "LLM_DOC_MINING",
+          "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Primary contact for household"
+          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
       }
     },
@@ -6866,10 +6866,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 19",
           "source_raw_value": "Petrov, Dmitri",
-          "method": "CLIENT_HOUSEHOLD_FK",
-          "confidence": 1.0,
+          "method": "ALIAS_RESOLVER",
+          "confidence": 0.98,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Direct link to household HH-PETROV"
+          "reasoning": "Resolved 'Petrov, Dmitri' -> 'Dmitri Petrov' -> Household HH-PETROV"
         }
       }
     }

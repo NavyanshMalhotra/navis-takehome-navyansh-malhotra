@@ -38,7 +38,7 @@
     "category": "UNASSIGNED_ADVISOR",
     "title": "Unassigned Primary Advisor for Household 'Petit' (Louis Petit)",
     "trigger": "Advisor field is blank in Notion CRM for 'Louis Petit'. Canonical Rule 1 requires exactly one non-null primary advisor.",
-    "evidence": "Notion Client row for 'Louis Petit'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'None'.",
+    "evidence": "Notion Client row for 'Louis Petit'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'Never got a proper advisor of record assigned.'.",
     "candidate_options": [
       "Assign to Priya Raman (San Francisco)",
       "Assign to Marcus Webb (Chicago)",

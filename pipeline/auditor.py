@@ -57,9 +57,10 @@ class AuditorReflectionAgent(BaseAgent):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def audit_canonical_bundle(self, bundle: CanonicalOutputBundle, run_semantic_check: bool = True) -> AuditReport:
+    @classmethod
+    def audit_canonical_bundle(cls, bundle: CanonicalOutputBundle, run_semantic_check: bool = True) -> AuditReport:
         """Executes structural and invariant audits across all canonical rules."""
-        with telemetry.trace_agent(self.name, task="audit_canonical_bundle"):
+        with telemetry.trace_agent(cls.name if hasattr(cls, "name") else "AuditorReflectionAgent", task="audit_canonical_bundle"):
             rule_results = []
             errors = []
             warnings = []
@@ -173,7 +174,7 @@ class AuditorReflectionAgent(BaseAgent):
             if run_semantic_check and llm_client.is_available:
                 try:
                     with telemetry.trace_tool("llm_semantic_plausibility"):
-                        plausibility_data = self.evaluate_semantic_plausibility(bundle)
+                        plausibility_data = cls.evaluate_semantic_plausibility(bundle)
                     if plausibility_data.get("flags"):
                         warnings.extend(plausibility_data["flags"])
                 except Exception as exc:
@@ -191,7 +192,8 @@ class AuditorReflectionAgent(BaseAgent):
                 plausibility_review=plausibility_data,
             )
 
-    def evaluate_semantic_plausibility(self, bundle: CanonicalOutputBundle) -> Dict[str, Any]:
+    @classmethod
+    def evaluate_semantic_plausibility(cls, bundle: CanonicalOutputBundle) -> Dict[str, Any]:
         """Evaluates domain consistency and plausibility using Gemini."""
         sample_summary = {
             "total_households": len(bundle.households),

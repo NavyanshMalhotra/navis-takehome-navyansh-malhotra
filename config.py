@@ -60,7 +60,7 @@ class PipelineConfig:
     })
 
     # Target Firm Dynamic Resolution
-    firm_name: str = os.getenv("FIRM_NAME", "Beaconcrest Advisors")
+    firm_name: Optional[str] = field(default=None)
 
     # Telemetry and Tracing
     enable_telemetry: bool = True
@@ -71,5 +71,22 @@ class PipelineConfig:
     CLIENT_ROLES: tuple = ("PRIMARY", "SPOUSE", "DEPENDENT", "SIGNER", "OTHER")
     ACCOUNT_TYPES: tuple = ("INDIVIDUAL", "JOINT", "TRUST", "IRA", "ROTH_IRA", "CORPORATE", "OTHER")
     INTERACTION_TYPES: tuple = ("REVIEW", "PROSPECTING", "ONBOARDING", "OTHER")
+
+    def __post_init__(self):
+        env_firm = os.getenv("FIRM_NAME")
+        if env_firm:
+            object.__setattr__(self, "firm_name", env_firm)
+            return
+
+        slack_path = self.sources_dir / "ops_slack_thread.md"
+        if slack_path.exists():
+            import re
+            content = slack_path.read_text(encoding="utf-8")[:1000]
+            m = re.search(r"\(([^,]+),\s*(?:a\s+fictional\s+RIA|an?\s+RIA)\)", content, re.IGNORECASE)
+            if m:
+                object.__setattr__(self, "firm_name", m.group(1).strip())
+                return
+
+        object.__setattr__(self, "firm_name", "Target RIA Firm")
 
 config = PipelineConfig()
