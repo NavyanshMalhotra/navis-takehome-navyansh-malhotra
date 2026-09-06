@@ -2688,7 +2688,7 @@
       "household_id": "HH-THOMPSON",
       "first_name": "Sarah",
       "last_name": "Thompson",
-      "role": "PRIMARY",
+      "role": "SPOUSE",
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.10%",
@@ -2709,10 +2709,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Sarah Thompson 4333491d3e3d9970dcc44a35f46ac83f.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Sarah Thompson",
-          "method": "DEFAULT_PRIMARY",
-          "confidence": 0.9,
+          "method": "LLM_DOC_MINING",
+          "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Primary contact for household"
+          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
       }
     },
@@ -4231,7 +4231,7 @@
           "method": "JOINT_ACCOUNT_SPOUSAL_RESOLUTION",
           "confidence": 0.96,
           "rule_or_agent": "ENTITY_RESOLVER_AGENT",
-          "reasoning": "Joint account holder 'Bob & Linda Chen' matched to client 'Robert Chen' in household via onomastic alias reasoning."
+          "reasoning": "Joint account holder 'Bob & Linda Chen' matched to client 'Robert Chen'."
         },
         "market_value_usd": {
           "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
@@ -4387,7 +4387,7 @@
           "method": "ONOMASTIC_ALIAS_RESOLUTION",
           "confidence": 0.95,
           "rule_or_agent": "ENTITY_RESOLVER_AGENT",
-          "reasoning": "'G. Whitfield' matched to 'George Whitfield' via nickname/diminutive resolution ('g.' -> 'george')."
+          "reasoning": "'G. Whitfield' matched to 'George Whitfield' via nickname resolution ('g.' -> 'george')."
         },
         "market_value_usd": {
           "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
@@ -5479,7 +5479,7 @@
           "method": "ONOMASTIC_ALIAS_RESOLUTION",
           "confidence": 0.95,
           "rule_or_agent": "ENTITY_RESOLVER_AGENT",
-          "reasoning": "'Bill Fitzgerald' matched to 'William Fitzgerald' via nickname/diminutive resolution ('bill' -> 'william')."
+          "reasoning": "'Bill Fitzgerald' matched to 'William Fitzgerald' via nickname resolution ('bill' -> 'william')."
         },
         "market_value_usd": {
           "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
@@ -6402,10 +6402,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 2",
           "source_raw_value": "Robert Chen",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Robert Chen' -> 'Robert Chen' -> Household HH-CHEN"
+          "reasoning": "Direct link to household HH-CHEN"
         }
       }
     },
@@ -6431,10 +6431,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 3",
           "source_raw_value": "Ada Okonkwo",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Ada Okonkwo' -> 'Ada Okonkwo' -> Household HH-OKONKWO"
+          "reasoning": "Direct link to household HH-OKONKWO"
         }
       }
     },
@@ -6460,10 +6460,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 4",
           "source_raw_value": "Emily Harrington",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Emily Harrington' -> 'Emily Harrington' -> Household HH-HARRINGTON"
+          "reasoning": "Direct link to household HH-HARRINGTON"
         }
       }
     },
@@ -6489,10 +6489,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 5",
           "source_raw_value": "Patrick Brennan",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Patrick Brennan' -> 'Patrick Brennan' -> Household HH-BRENNAN"
+          "reasoning": "Direct link to household HH-BRENNAN"
         }
       }
     },
@@ -6518,10 +6518,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 6",
           "source_raw_value": "Yusuf Al-Rashid",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Yusuf Al-Rashid' -> 'Yusuf Al-Rashid' -> Household HH-AL-RASHID"
+          "reasoning": "Direct link to household HH-AL-RASHID"
         }
       }
     },
@@ -6547,10 +6547,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 7",
           "source_raw_value": "Astrid Johansson",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Astrid Johansson' -> 'Astrid Johansson' -> Household HH-JOHANSSON"
+          "reasoning": "Direct link to household HH-JOHANSSON"
         }
       }
     },
@@ -6576,10 +6576,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 8",
           "source_raw_value": "Rajesh Iyer",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Rajesh Iyer' -> 'Rajesh Iyer' -> Household HH-IYER"
+          "reasoning": "Direct link to household HH-IYER"
         }
       }
     },
@@ -6605,10 +6605,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 9",
           "source_raw_value": "Jenny Park",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Jenny Park' -> 'Jenny Park' -> Household HH-PARK"
+          "reasoning": "Direct link to household HH-PARK"
         }
       }
     },
@@ -6634,10 +6634,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 10",
           "source_raw_value": "Susan Fairbanks",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Susan Fairbanks' -> 'Susan Fairbanks' -> Household HH-FAIRBANKS"
+          "reasoning": "Direct link to household HH-FAIRBANKS"
         }
       }
     },
@@ -6663,10 +6663,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 11",
           "source_raw_value": "Miguel Costa",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Miguel Costa' -> 'Miguel Costa' -> Household HH-COSTA"
+          "reasoning": "Direct link to household HH-COSTA"
         }
       }
     },
@@ -6692,10 +6692,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 12",
           "source_raw_value": "Klaus Bauer",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Klaus Bauer' -> 'Klaus Bauer' -> Household HH-BAUER"
+          "reasoning": "Direct link to household HH-BAUER"
         }
       }
     },
@@ -6721,10 +6721,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 13",
           "source_raw_value": "Nora Lindholm",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Nora Lindholm' -> 'Nora Lindholm' -> Household HH-LINDHOLM"
+          "reasoning": "Direct link to household HH-LINDHOLM"
         }
       }
     },
@@ -6750,10 +6750,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 15",
           "source_raw_value": "Bill Thompson",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Bill Thompson' -> 'Bill Thompson' -> Household HH-THOMPSON"
+          "reasoning": "Direct link to household HH-THOMPSON"
         }
       }
     },
@@ -6779,10 +6779,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 16",
           "source_raw_value": "Kenji Nakamura",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Kenji Nakamura' -> 'Kenji Nakamura' -> Household HH-NAKAMURA"
+          "reasoning": "Direct link to household HH-NAKAMURA"
         }
       }
     },
@@ -6808,10 +6808,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 17",
           "source_raw_value": "Maria Delgado",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Maria Delgado' -> 'Maria Delgado' -> Household HH-DELGADO"
+          "reasoning": "Direct link to household HH-DELGADO"
         }
       }
     },
@@ -6866,10 +6866,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 19",
           "source_raw_value": "Petrov, Dmitri",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Petrov, Dmitri' -> 'Dmitri Petrov' -> Household HH-PETROV"
+          "reasoning": "Direct link to household HH-PETROV"
         }
       }
     }

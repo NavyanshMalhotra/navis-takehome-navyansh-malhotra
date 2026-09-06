@@ -38,7 +38,7 @@
     "category": "UNASSIGNED_ADVISOR",
     "title": "Unassigned Primary Advisor for Household 'Petit' (Louis Petit)",
     "trigger": "Advisor field is blank in Notion CRM for 'Louis Petit'. Canonical Rule 1 requires exactly one non-null primary advisor.",
-    "evidence": "Notion Client row for 'Louis Petit'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'Never got a proper advisor of record assigned.'.",
+    "evidence": "Notion Client row for 'Louis Petit'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'None'.",
     "candidate_options": [
       "Assign to Priya Raman (San Francisco)",
       "Assign to Marcus Webb (Chicago)",
@@ -71,8 +71,8 @@
     "id": "CLARIF-ACC-CU-5010",
     "category": "ORPHAN_ACCOUNT",
     "title": "Unmapped Custodian Account — Carlos Vasquez (CU-5010)",
-    "trigger": "Account 'CU-5010' at Schwab ($980,000.00 USD) has holder 'Carlos Vasquez' with no matching client or household in Notion CRM. Resolution confidence: 0.20.",
-    "evidence": "Custodian position record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 12. Custodian=Schwab, Type=Individual. Method=UNMAPPED_ORPHAN_ACCOUNT.",
+    "trigger": "Account 'CU-5010' at Schwab ($980,000.00 USD) has holder 'Carlos Vasquez' with no matching client or household in Notion CRM. Confidence: 0.20.",
+    "evidence": "Custodian record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 12. Custodian=Schwab, Type=Individual. Method=UNMAPPED_ORPHAN_ACCOUNT.",
     "candidate_options": [
       "Add 'Carlos Vasquez' as a new Household and Client in Nevis.",
       "Link to an existing client under a different legal name/entity.",
@@ -88,8 +88,8 @@
     "id": "CLARIF-ACC-CU-6025",
     "category": "ORPHAN_ACCOUNT",
     "title": "Unmapped Custodian Account — Priyanka Mehta (CU-6025)",
-    "trigger": "Account 'CU-6025' at Schwab ($670,000.00 USD) has holder 'Priyanka Mehta' with no matching client or household in Notion CRM. Resolution confidence: 0.20.",
-    "evidence": "Custodian position record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 37. Custodian=Schwab, Type=Individual. Method=UNMAPPED_ORPHAN_ACCOUNT.",
+    "trigger": "Account 'CU-6025' at Schwab ($670,000.00 USD) has holder 'Priyanka Mehta' with no matching client or household in Notion CRM. Confidence: 0.20.",
+    "evidence": "Custodian record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 37. Custodian=Schwab, Type=Individual. Method=UNMAPPED_ORPHAN_ACCOUNT.",
     "candidate_options": [
       "Add 'Priyanka Mehta' as a new Household and Client in Nevis.",
       "Link to an existing client under a different legal name/entity.",
