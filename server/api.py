@@ -110,6 +110,7 @@ def get_pipeline_status():
     return {
         "status": "idle" if not state.is_running else "running",
         "firm_name": config.firm_name,
+        "operations_lead": config.operations_lead,
         "total_households": len(state.bundle.households) if state.bundle else 0,
         "total_clients": len(state.bundle.clients) if state.bundle else 0,
         "total_accounts": len(state.bundle.accounts) if state.bundle else 0,

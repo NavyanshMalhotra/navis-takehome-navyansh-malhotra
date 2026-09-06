@@ -8,6 +8,8 @@ let canonicalData = {};
 let clarificationsData = { pending: [], resolved: [] };
 let advisorsList = [];
 let searchQuery = '';
+let operationsLead = 'Operations Lead';
+let firmName = 'RIA Firm';
 
 document.addEventListener('DOMContentLoaded', () => {
   initPlatform();
@@ -66,7 +68,17 @@ async function fetchStatus() {
   try {
     const res = await fetch('/api/pipeline/status');
     const data = await res.json();
-    
+
+    operationsLead = data.operations_lead || 'Operations Lead';
+    firmName = data.firm_name || 'RIA Firm';
+
+    const tenantEl = document.getElementById('tenantFirmName');
+    if (tenantEl) tenantEl.textContent = `${firmName} (RIA)`;
+
+    document.querySelectorAll('.opLeadName').forEach(el => {
+      el.textContent = operationsLead;
+    });
+
     const fmtUsd = (val) => '$' + Number(val || 0).toLocaleString(undefined, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
@@ -77,6 +89,16 @@ async function fetchStatus() {
 
     const totalMvEl = document.getElementById('kpiTotalMv');
     if (totalMvEl) totalMvEl.textContent = fmtUsd(data.total_market_value_usd);
+
+    const delta = (data.total_market_value_usd || 0) - (data.active_aum_usd || 0);
+    const deltaNoteEl = document.getElementById('kpiDeltaNote');
+    if (deltaNoteEl) {
+      if (Math.abs(delta) > 0.01) {
+        deltaNoteEl.innerHTML = `Delta: <span class="metric-delta">-$${Math.abs(delta).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span> (Inactive / Churn delta)`;
+      } else {
+        deltaNoteEl.textContent = '100% reconciled to active AUM';
+      }
+    }
 
     const hhEl = document.getElementById('kpiHouseholds');
     if (hhEl) hhEl.textContent = data.total_households;
@@ -372,7 +394,7 @@ function renderTriageList() {
         </div>
 
         <div class="clarif-actions-strip">
-          <span class="clarif-meta-note">Target: Dana Ruiz (Head of Operations) &bull; Confidence: <b>${c.confidence.toFixed(2)}</b></span>
+          <span class="clarif-meta-note">Target: <span class="opLeadName">${operationsLead}</span> &bull; Confidence: <b>${c.confidence.toFixed(2)}</b></span>
           ${actionControls}
         </div>
       </div>
@@ -422,6 +444,27 @@ async function submitDefaultResolution(itemId) {
 function renderAuditReport(audit) {
   const tbody = document.getElementById('auditRulesList');
   if (!tbody) return;
+
+  const totalRules = (audit.rule_results || []).length;
+  const passedRules = (audit.rule_results || []).filter(r => r.passed).length;
+  const allPassed = passedRules === totalRules && totalRules > 0;
+
+  const bannerEl = document.getElementById('auditBannerText');
+  if (bannerEl) {
+    bannerEl.textContent = allPassed
+      ? `100% Invariant Compliance: ${passedRules} of ${totalRules} Canonical Rules Passed`
+      : `Audit Exceptions: ${passedRules} of ${totalRules} Rules Passed`;
+  }
+
+  const summaryEl = document.getElementById('auditTabSummary');
+  if (summaryEl) {
+    summaryEl.textContent = `${passedRules}/${totalRules}`;
+  }
+
+  const mastheadEl = document.getElementById('mastheadStatus');
+  if (mastheadEl) {
+    mastheadEl.textContent = allPassed ? `${passedRules}/${totalRules} Invariant Rules Passed` : 'Audit Exception Detected';
+  }
 
   tbody.innerHTML = (audit.rule_results || []).map(r => `
     <tr>

@@ -14,13 +14,13 @@
       <div class="masthead-left">
         <h1 class="brand-title">Nevis</h1>
         <div class="brand-subtitle">
-          Onboarding Data Platform &bull; Firm: <span class="tenant">Beaconcrest Advisors (RIA)</span> &bull; Cycle: Round 2
+          Onboarding Data Platform &bull; Firm: <span class="tenant" id="tenantFirmName">Loading...</span>
         </div>
       </div>
       <div class="masthead-right">
         <div class="system-status">
           <span class="status-dot"></span>
-          <span class="status-text" id="mastheadStatus">8/8 Invariant Rules Passed</span>
+          <span class="status-text" id="mastheadStatus">Verifying Invariants...</span>
         </div>
         <button id="runPipelineBtn" class="btn btn-secondary" onclick="triggerPipelineRun()">
           Execute Sync Pipeline
@@ -34,38 +34,38 @@
     <section class="metric-summary-strip">
       <div class="metric-cell highlight">
         <div class="metric-label">Active Billing AUM</div>
-        <div class="metric-value" id="kpiActiveAum">$67,283,225</div>
+        <div class="metric-value" id="kpiActiveAum">—</div>
         <div class="metric-note">Excludes inactive households (Rule 8)</div>
       </div>
 
       <div class="metric-cell">
         <div class="metric-label">Custodian Market Value</div>
-        <div class="metric-value" id="kpiTotalMv">$67,295,625</div>
-        <div class="metric-note">Delta: <span class="metric-delta">-$12,400</span> (Thompson churn)</div>
+        <div class="metric-value" id="kpiTotalMv">—</div>
+        <div class="metric-note" id="kpiDeltaNote">Reconciling custodian market value...</div>
       </div>
 
       <div class="metric-cell">
         <div class="metric-label">Households</div>
-        <div class="metric-value" id="kpiHouseholds">52</div>
-        <div class="metric-note">51 active, 1 churned</div>
+        <div class="metric-value" id="kpiHouseholds">—</div>
+        <div class="metric-note" id="kpiHhNote">Canonicalized households</div>
       </div>
 
       <div class="metric-cell">
         <div class="metric-label">Accounts</div>
-        <div class="metric-value" id="kpiAccounts">51</div>
-        <div class="metric-note">2 orphans in triage (Rule 4)</div>
+        <div class="metric-value" id="kpiAccounts">—</div>
+        <div class="metric-note" id="kpiAccNote">Mapped custodian accounts</div>
       </div>
 
       <div class="metric-cell">
         <div class="metric-label">Clients</div>
-        <div class="metric-value" id="kpiClients">56</div>
-        <div class="metric-note">Petrov duplicate collapsed</div>
+        <div class="metric-value" id="kpiClients">—</div>
+        <div class="metric-note" id="kpiCliNote">Deduplicated individuals</div>
       </div>
 
       <div class="metric-cell highlight">
         <div class="metric-label">Clarifications Queue</div>
-        <div class="metric-value" id="kpiClarif">7</div>
-        <div class="metric-note">Customer-ready for Dana Ruiz</div>
+        <div class="metric-value" id="kpiClarif">—</div>
+        <div class="metric-note">Actionable for <span class="opLeadName">Operations</span></div>
       </div>
     </section>
 
@@ -73,9 +73,9 @@
     <nav class="view-tabs">
       <button class="view-tab active" onclick="switchTab('canonical')">Canonical Store</button>
       <button class="view-tab" onclick="switchTab('triage')">
-        Clarifications Queue <span class="tab-badge" id="triageBadge">7</span>
+        Clarifications Queue <span class="tab-badge" id="triageBadge">—</span>
       </button>
-      <button class="view-tab" onclick="switchTab('audit')">Rules & Invariants (8/8)</button>
+      <button class="view-tab" onclick="switchTab('audit')">Rules &amp; Invariants (<span id="auditTabSummary">—</span>)</button>
       <button class="view-tab" onclick="switchTab('slack')">Slack Message Export</button>
     </nav>
 
@@ -83,11 +83,11 @@
     <section id="view-canonical" class="view-pane active">
       <div class="panel-controls">
         <div class="entity-subnav">
-          <button class="entity-btn active" onclick="filterEntityType('households')">Households (<span id="countHh">52</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('clients')">Clients (<span id="countCli">56</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('accounts')">Accounts (<span id="countAcc">51</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('advisors')">Advisors (<span id="countAdv">7</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('interactions')">Interactions (<span id="countInt">17</span>)</button>
+          <button class="entity-btn active" onclick="filterEntityType('households')">Households (<span id="countHh">—</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('clients')">Clients (<span id="countCli">—</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('accounts')">Accounts (<span id="countAcc">—</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('advisors')">Advisors (<span id="countAdv">—</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('interactions')">Interactions (<span id="countInt">—</span>)</button>
         </div>
         <input type="text" id="canonicalSearch" class="search-input" placeholder="Filter records by name, ID, custodian..." oninput="handleCanonicalSearch()">
       </div>
@@ -105,7 +105,7 @@
       <div class="panel-controls triage-header-block">
         <div>
           <h2>Human-in-the-Loop Clarification Queue</h2>
-          <p>Unsettled discrepancies prepared for Dana Ruiz (Head of Operations). Operators can confirm proposed defaults or assign relationships directly.</p>
+          <p>Unsettled discrepancies prepared for <span class="opLeadName">Operations Lead</span>. Operators can confirm proposed defaults or assign relationships directly.</p>
         </div>
         <button class="btn btn-secondary" onclick="copySlackMessage()">Copy Message to Clipboard</button>
       </div>
@@ -119,8 +119,8 @@
     <section id="view-audit" class="view-pane">
       <div class="audit-card">
         <div class="audit-banner">
-          <span class="audit-banner-text">100% Invariant Compliance: 8 of 8 Canonical Rules Passed</span>
-          <span style="font-size:12px; color:var(--text-secondary);">Automated ReAct Auditor Verification</span>
+          <span class="audit-banner-text" id="auditBannerText">Automated ReAct Auditor Verification</span>
+          <span style="font-size:12px; color:var(--text-secondary);">Rule Invariant Enforcement</span>
         </div>
         <table class="audit-table">
           <thead>
@@ -142,7 +142,7 @@
     <section id="view-slack" class="view-pane">
       <div class="slack-box">
         <div class="slack-box-header">
-          <div class="slack-channel-name">#nevis-onboarding &bull; Target: Dana Ruiz (Head of Operations)</div>
+          <div class="slack-channel-name">#nevis-onboarding &bull; Target: <span class="opLeadName">Head of Operations</span></div>
           <button class="btn btn-primary" onclick="copySlackMessage()">Copy Message Text</button>
         </div>
         <pre class="slack-text-render" id="slackMarkdownContent">Loading Slack export...</pre>
