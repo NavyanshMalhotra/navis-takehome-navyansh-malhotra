@@ -129,6 +129,9 @@ class EntityResolverAgent:
         if cache_key in self._alias_cache:
             return self._alias_cache[cache_key]
 
+        if not llm_client.is_available:
+            return False
+
         prompt = (
             f"In wealth management entity resolution and onomastics, is '{c.title()}' a standard "
             f"or recognizable diminutive, nickname, or given name variation of '{t.title()}' "
@@ -285,43 +288,68 @@ class EntityResolverAgent:
                         reasoning=f"Surname joint holder '{holder}' matched to household '{hh_obj.get('household_name')}'."
                     )
 
-        # 7. LLM Disambiguation for Ambiguous / Complex Holdings
-        # If deterministic rules did not yield high confidence, invoke Gemini reasoning
-        try:
-            candidates = [
-                {"name": c.get("Name"), "household": c.get("household_id"), "segment": c.get("Segment")}
-                for c in clients[:30]  # pass top candidate roster
-            ]
-            llm_prompt = (
-                f"Custodian Account Holder: '{holder}'\n"
-                f"Source Account Type: '{source_acc_type}'\n"
-                f"Known Clients & Households: {json.dumps(candidates)}\n\n"
-                f"Determine which client and household this account belongs to. "
-                f"If there is a clear match (e.g. corporate LLC of client, initials, or married couple), "
-                f"return the matching client name and confidence between 0.80 and 0.95. "
-                f"If the holder cannot be matched confidently, set is_orphan=true and confidence < 0.50.\n"
-                f"Return JSON strictly matching:\n"
-                f'{{"matched_name": "...", "account_type": "...", "confidence": 0.90, "reasoning": "...", "is_orphan": false}}'
-            )
-            llm_resp = llm_client.generate_json(self.system_prompt, llm_prompt)
-            matched_name = llm_resp.get("matched_name")
-            matched_client = client_by_name.get(matched_name.lower()) if matched_name else None
+        # 7. Generalized Single-Holder Nickname Resolution
+        # Catches cases like "Bill Fitzgerald" -> "William Fitzgerald"
+        holder_tokens = holder_lower.split()
+        if len(holder_tokens) >= 2:
+            cand_first = holder_tokens[0]
+            cand_last = holder_tokens[-1]
+            for c_name_clean, c_record in client_by_name.items():
+                c_tokens = c_name_clean.split()
+                if len(c_tokens) >= 2:
+                    c_first, c_last = c_tokens[0], c_tokens[-1]
+                    if c_last == cand_last and c_first != cand_first and self.is_diminutive_or_alias(cand_first, c_first):
+                        norm_type = self._normalize_account_type(source_acc_type)
+                        return EntityResolutionResult(
+                            account_number=acc_num,
+                            raw_holder=holder,
+                            matched_household_id=c_record.get("household_id"),
+                            matched_client_id=c_record.get("client_id"),
+                            resolved_account_type=norm_type,
+                            confidence=0.95,
+                            resolution_method="ONOMASTIC_ALIAS_RESOLUTION",
+                            reasoning=f"'{holder}' matched to '{c_record.get('Name')}' via nickname/diminutive resolution ('{cand_first}' -> '{c_first}')."
+                        )
 
-            if matched_client and not llm_resp.get("is_orphan"):
-                return EntityResolutionResult(
-                    account_number=acc_num,
-                    raw_holder=holder,
-                    matched_household_id=matched_client.get("household_id"),
-                    matched_client_id=matched_client.get("client_id"),
-                    resolved_account_type=self._normalize_account_type(llm_resp.get("account_type", source_acc_type)),
-                    confidence=float(llm_resp.get("confidence", 0.88)),
-                    resolution_method="LLM_AGENT_DISAMBIGUATION",
-                    reasoning=llm_resp.get("reasoning", f"LLM resolved '{holder}' to '{matched_name}'.")
+        # 8. LLM Disambiguation for Ambiguous / Complex Holdings
+        if not llm_client.is_available:
+            logger.debug("LLM unavailable, skipping disambiguation for '%s'", holder)
+        else:
+            try:
+                candidates = [
+                    {"name": c.get("Name"), "household": c.get("household_id"), "segment": c.get("Segment")}
+                    for c in clients
+                ]
+                llm_prompt = (
+                    f"Custodian Account Holder: '{holder}'\n"
+                    f"Source Account Type: '{source_acc_type}'\n"
+                    f"Known Clients & Households: {json.dumps(candidates)}\n\n"
+                    f"Determine which client and household this account belongs to. "
+                    f"If there is a clear match (e.g. corporate LLC of client, initials, or married couple), "
+                    f"return the matching client name and confidence between 0.80 and 0.95. "
+                    f"If the holder cannot be matched confidently, set is_orphan=true and confidence < 0.50.\n"
+                    f"Return JSON strictly matching:\n"
+                    f'{{"matched_name": "...", "account_type": "...", "confidence": 0.90, "reasoning": "...", "is_orphan": false}}'
                 )
-        except Exception as e:
-            logger.debug("LLM entity disambiguation fallback for %s: %s", holder, e)
+                llm_resp = llm_client.generate_json(self.system_prompt, llm_prompt)
+                matched_name = llm_resp.get("matched_name")
+                matched_client = client_by_name.get(matched_name.lower()) if matched_name else None
 
-        # 8. Unmatched Orphan Account
+                if matched_client and not llm_resp.get("is_orphan"):
+                    return EntityResolutionResult(
+                        account_number=acc_num,
+                        raw_holder=holder,
+                        matched_household_id=matched_client.get("household_id"),
+                        matched_client_id=matched_client.get("client_id"),
+                        resolved_account_type=self._normalize_account_type(llm_resp.get("account_type", source_acc_type)),
+                        confidence=float(llm_resp.get("confidence", 0.88)),
+                        resolution_method="LLM_AGENT_DISAMBIGUATION",
+                        reasoning=llm_resp.get("reasoning", f"LLM resolved '{holder}' to '{matched_name}'.")
+                    )
+            except Exception as e:
+                logger.debug("LLM entity disambiguation fallback for %s: %s", holder, e)
+
+        # 9. Unmatched Orphan Account
         norm_type = self._normalize_account_type(source_acc_type)
         return EntityResolutionResult(
             account_number=acc_num,

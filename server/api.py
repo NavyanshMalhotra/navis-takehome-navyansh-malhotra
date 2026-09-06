@@ -179,6 +179,18 @@ def resolve_clarification(req: ResolveClarificationRequest):
     
     state.resolved_items[req.item_id] = req.dict()
     state._apply_resolution_in_memory(req.item_id, req.dict())
+
+    # Persist resolution to SQLite knowledge store so it survives restarts
+    from pipeline.agent_tools import knowledge_db
+    knowledge_db.save_rule(
+        rule_id=f"HITL-{req.item_id}",
+        category="HITL_RESOLUTION",
+        description=f"Operator resolved {req.item_id}: {req.resolved_value or req.selected_advisor_id}",
+        stakeholder="Operator (HITL)",
+        source_reference="POST /api/clarifications/resolve",
+        scope="CLIENT_SPECIFIC",
+        metadata=req.dict(),
+    )
     
     # Refresh audit report and write outputs
     state.audit_report = CanonicalAuditor.audit_canonical_bundle(state.bundle)

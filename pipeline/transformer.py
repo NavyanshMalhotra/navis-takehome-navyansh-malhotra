@@ -264,7 +264,7 @@ class CanonicalTransformer:
             source_tags = list(extra_tags)
 
             # Preserve business-meaningful unmapped CRM fields per Canonical Rule 6
-            for col in ["Risk Profile", "Fee Schedule", "Segment", "Tags"]:
+            for col in ["Risk Profile", "Fee Schedule", "Segment", "Tags", "Referred By", "Client Since"]:
                 val = rc.get(col, "").strip()
                 if val:
                     source_tags.append(f"{col}: {val}")
@@ -426,26 +426,26 @@ class CanonicalTransformer:
                 r, hh_dicts, client_dicts, client_notes
             )
 
-            # Check for Orphan Account (Canonical Rule 4)
-            if res.is_orphan or not res.matched_household_id:
+            # Confidence-based routing (wired to config thresholds)
+            if res.is_orphan or not res.matched_household_id or res.confidence < config.confidence_low_threshold:
                 clarif_id = f"CLARIF-ACC-{acc_num}"
                 val_display = f"${float(raw_mv):,.2f} {currency}" if raw_mv else "N/A"
                 clarifications.append(ClarificationItem(
                     id=clarif_id,
                     category="ORPHAN_ACCOUNT",
                     title=f"Unmapped Custodian Account — {holder} ({acc_num})",
-                    trigger=f"Account '{acc_num}' at {custodian} ({val_display}) has holder '{holder}' with no matching client or household in Notion CRM.",
-                    evidence=f"Custodian position record in {source_file}:Row {source_row}. Custodian={custodian}, Type={raw_acc_type}.",
+                    trigger=f"Account '{acc_num}' at {custodian} ({val_display}) has holder '{holder}' with no matching client or household in Notion CRM. Resolution confidence: {res.confidence:.2f}.",
+                    evidence=f"Custodian position record in {source_file}:Row {source_row}. Custodian={custodian}, Type={raw_acc_type}. Method={res.resolution_method}.",
                     candidate_options=[
                         f"Add '{holder}' as a new Household and Client in Nevis.",
                         f"Link to an existing client under a different legal name/entity.",
                         f"Account is closed, winding down, or belongs to another firm."
                     ],
                     proposed_default=f"Stage account under holding queue; request Dana confirm client identity or create Household '{holder.split()[-1]} Household'.",
-                    confidence=0.20,
+                    confidence=res.confidence,
                     entity_ref=acc_num
                 ))
-                continue  # Rule 4: Do not include orphan accounts in committed canonical output
+                continue
 
             # Parse Market Value & Convert Currency (Rule 5)
             market_val_num = float(raw_mv) if raw_mv else 0.0

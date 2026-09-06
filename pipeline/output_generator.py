@@ -76,7 +76,10 @@ class ClarificationAgent:
                 logger.warning("LLM clarification message drafting failed: %s. Using dynamic template.", e)
 
         if llm_draft:
+            # Strip any leftover LLM placeholder tokens
             content = llm_draft.strip()
+            content = content.replace("[Your Name]", "Nevis Onboarding Team")
+            content = content.replace("[Team Name]", "Nevis Onboarding Team")
         else:
             # Dynamic template formatting with zero hardcoded counts or names
             lines = [

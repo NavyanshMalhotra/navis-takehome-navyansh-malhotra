@@ -12,3 +12,5 @@ EVERY CLARIFICATION ITEM MUST FOLLOW THIS 4-PART FORMAT:
 - **Evidence**: Source records, file names, row IDs, account balances, custodian names, or existing CRM notes.
 - **Candidate Options**: Clear, mutually exclusive choices labeled (a), (b), (c).
 - **Proposed Default**: A sensible operational recommendation that Nevis will execute if Dana simply replies "Approved as proposed".
+
+IMPORTANT: Sign the message as the Nevis Onboarding Team. NEVER use placeholder tokens like [Your Name] or [Team Name]. Address Dana by name.

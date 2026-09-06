@@ -54,7 +54,9 @@ class DocMinerAgent:
                     "file": file_path,
                 })
 
-        if not notes_to_mine:
+        if not notes_to_mine or not llm_client.is_available:
+            if notes_to_mine and not llm_client.is_available:
+                logger.info("LLM unavailable — returning default insights for %d clients.", len(notes_to_mine))
             return extracted_by_client
 
         # Process client notes in manageable batches (15 per batch) to prevent gateway timeouts
@@ -159,7 +161,9 @@ class DocMinerAgent:
                     "body": body,
                 })
 
-        if not meetings_to_mine:
+        if not meetings_to_mine or not llm_client.is_available:
+            if meetings_to_mine and not llm_client.is_available:
+                logger.info("LLM unavailable — returning default meeting insights for %d meetings.", len(meetings_to_mine))
             return extracted_by_meeting
 
         batch_prompt = (

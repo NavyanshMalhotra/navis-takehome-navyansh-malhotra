@@ -5,12 +5,12 @@
     "as_of_date": "2025-06-30",
     "total_households": 52,
     "total_clients": 56,
-    "total_accounts": 50,
+    "total_accounts": 51,
     "total_advisors": 7,
     "total_interactions": 17,
-    "total_clarifications_flagged": 8,
-    "total_market_value_usd": 66415625.0,
-    "total_active_aum_usd": 66403225.0
+    "total_clarifications_flagged": 7,
+    "total_market_value_usd": 67295625.0,
+    "total_active_aum_usd": 67283225.0
   },
   "households": [
     {
@@ -22,7 +22,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: March 11, 2016"
       ],
       "market_value_usd": 3230700.0,
       "is_active": true,
@@ -66,7 +67,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: July 22, 2014"
       ],
       "market_value_usd": 5120000.0,
       "is_active": true,
@@ -110,7 +112,8 @@
       "source_tags": [
         "acquired from Harborline",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 2, 2019"
       ],
       "market_value_usd": 1240000.0,
       "is_active": true,
@@ -154,7 +157,8 @@
       "source_tags": [
         "acquired from Harborline",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 2, 2019"
       ],
       "market_value_usd": 670000.0,
       "is_active": true,
@@ -198,7 +202,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 0.85%",
-        "Segment: Corporate"
+        "Segment: Corporate",
+        "Client Since: May 30, 2018"
       ],
       "market_value_usd": 9110000.0,
       "is_active": true,
@@ -240,7 +245,8 @@
       "status": "PROSPECT",
       "as_of_date": "2025-06-30",
       "source_tags": [
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: May 14, 2025"
       ],
       "market_value_usd": null,
       "is_active": false,
@@ -284,7 +290,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: January 19, 2017"
       ],
       "market_value_usd": 445000.0,
       "is_active": true,
@@ -328,7 +335,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 0.85%",
-        "Segment: High Net Worth"
+        "Segment: High Net Worth",
+        "Client Since: September 8, 2015"
       ],
       "market_value_usd": 2008125.0,
       "is_active": true,
@@ -372,7 +380,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: April 27, 2013"
       ],
       "market_value_usd": 12400.0,
       "is_active": false,
@@ -416,7 +425,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: February 10, 2018"
       ],
       "market_value_usd": 1650000.0,
       "is_active": true,
@@ -460,7 +470,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: June 15, 2020"
       ],
       "market_value_usd": 720000.0,
       "is_active": true,
@@ -504,7 +515,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: March 22, 2019"
       ],
       "market_value_usd": 385000.0,
       "is_active": true,
@@ -548,7 +560,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.10%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: November 5, 2016"
       ],
       "market_value_usd": 2640000.0,
       "is_active": true,
@@ -592,7 +605,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: January 30, 2021"
       ],
       "market_value_usd": 610000.0,
       "is_active": true,
@@ -636,7 +650,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: July 19, 2017"
       ],
       "market_value_usd": 1340000.0,
       "is_active": true,
@@ -680,7 +695,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: Tier 1",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: May 12, 2015"
       ],
       "market_value_usd": 1890000.0,
       "is_active": true,
@@ -724,7 +740,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: September 1, 2022"
       ],
       "market_value_usd": 445000.0,
       "is_active": true,
@@ -768,7 +785,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: April 18, 2014"
       ],
       "market_value_usd": 3200000.0,
       "is_active": true,
@@ -812,7 +830,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: December 3, 2020"
       ],
       "market_value_usd": 830000.0,
       "is_active": true,
@@ -856,7 +875,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: August 27, 2019"
       ],
       "market_value_usd": 560000.0,
       "is_active": true,
@@ -900,7 +920,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: February 14, 2016"
       ],
       "market_value_usd": 1470000.0,
       "is_active": true,
@@ -944,7 +965,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: October 9, 2018"
       ],
       "market_value_usd": 940000.0,
       "is_active": true,
@@ -988,7 +1010,9 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.10%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Referred By: Gregory Palme",
+        "Client Since: June 21, 2021"
       ],
       "market_value_usd": 1220000.0,
       "is_active": true,
@@ -1032,7 +1056,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: March 15, 2023"
       ],
       "market_value_usd": 675000.0,
       "is_active": true,
@@ -1076,7 +1101,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: November 28, 2017"
       ],
       "market_value_usd": 1850000.0,
       "is_active": true,
@@ -1118,7 +1144,8 @@
       "status": "PROSPECT",
       "as_of_date": "2025-06-30",
       "source_tags": [
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: June 1, 2025"
       ],
       "market_value_usd": null,
       "is_active": false,
@@ -1160,7 +1187,8 @@
       "status": "PROSPECT",
       "as_of_date": "2025-06-30",
       "source_tags": [
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: May 20, 2025"
       ],
       "market_value_usd": null,
       "is_active": false,
@@ -1205,7 +1233,8 @@
         "acquired from Harborline",
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 2, 2019"
       ],
       "market_value_usd": 730000.0,
       "is_active": true,
@@ -1250,7 +1279,8 @@
         "acquired from Harborline",
         "Risk Profile: Conservative",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 2, 2019"
       ],
       "market_value_usd": 540000.0,
       "is_active": true,
@@ -1294,7 +1324,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: Tier 1",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: March 3, 2018"
       ],
       "market_value_usd": 1620000.0,
       "is_active": true,
@@ -1338,7 +1369,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.10%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: July 12, 2019"
       ],
       "market_value_usd": 2339400.0,
       "is_active": true,
@@ -1382,11 +1414,12 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: June 8, 2016"
       ],
-      "market_value_usd": null,
+      "market_value_usd": 880000.0,
       "is_active": true,
-      "active_aum_usd": null,
+      "active_aum_usd": 880000.0,
       "_provenance": {
         "household_id": {
           "source_file": "nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7.csv",
@@ -1426,7 +1459,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: February 2, 2015"
       ],
       "market_value_usd": 1450000.0,
       "is_active": true,
@@ -1470,7 +1504,9 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Referred By: Seminar 2023",
+        "Client Since: January 14, 2019"
       ],
       "market_value_usd": 1780000.0,
       "is_active": true,
@@ -1514,7 +1550,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: August 9, 2021"
       ],
       "market_value_usd": 495000.0,
       "is_active": true,
@@ -1558,7 +1595,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: April 3, 2018"
       ],
       "market_value_usd": 640000.0,
       "is_active": true,
@@ -1603,7 +1641,8 @@
         "Risk Profile: Aggressive",
         "Fee Schedule: 0.85% – negotiated",
         "Segment: HNW",
-        "Tags: VIP"
+        "Tags: VIP",
+        "Client Since: September 20, 2016"
       ],
       "market_value_usd": 2550000.0,
       "is_active": true,
@@ -1647,7 +1686,8 @@
       "source_tags": [
         "Risk Profile: Growth",
         "Fee Schedule: Tier 2",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: February 27, 2017"
       ],
       "market_value_usd": 1510000.0,
       "is_active": true,
@@ -1691,7 +1731,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: See LOE",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 11, 2020"
       ],
       "market_value_usd": 580000.0,
       "is_active": true,
@@ -1736,7 +1777,8 @@
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
         "Segment: HNW",
-        "Tags: Do Not Contact"
+        "Tags: Do Not Contact",
+        "Client Since: May 6, 2015"
       ],
       "market_value_usd": 1930000.0,
       "is_active": true,
@@ -1780,7 +1822,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: July 30, 2022"
       ],
       "market_value_usd": 420000.0,
       "is_active": true,
@@ -1825,7 +1868,8 @@
         "Risk Profile: Moderate",
         "Fee Schedule: Tier 1",
         "Segment: HNW",
-        "Tags: Deceased"
+        "Tags: Deceased",
+        "Client Since: March 18, 2016"
       ],
       "market_value_usd": 1660000.0,
       "is_active": true,
@@ -1869,7 +1913,8 @@
       "source_tags": [
         "Risk Profile: Balanced",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: October 22, 2019"
       ],
       "market_value_usd": 705000.0,
       "is_active": true,
@@ -1913,7 +1958,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: January 8, 2018"
       ],
       "market_value_usd": 615000.0,
       "is_active": true,
@@ -1957,7 +2003,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: June 15, 2017"
       ],
       "market_value_usd": 1340000.0,
       "is_active": true,
@@ -2001,7 +2048,9 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Referred By: Emily Harrington",
+        "Client Since: December 1, 2020"
       ],
       "market_value_usd": 530000.0,
       "is_active": true,
@@ -2046,7 +2095,8 @@
         "Risk Profile: Conservative",
         "Fee Schedule: 1.10%",
         "Segment: HNW",
-        "Tags: VIP, ESG"
+        "Tags: VIP, ESG",
+        "Client Since: April 26, 2016"
       ],
       "market_value_usd": 2335000.0,
       "is_active": true,
@@ -2090,7 +2140,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: August 3, 2023"
       ],
       "market_value_usd": 385000.0,
       "is_active": true,
@@ -2132,7 +2183,8 @@
       "status": "PROSPECT",
       "as_of_date": "2025-06-30",
       "source_tags": [
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: June 2, 2025"
       ],
       "market_value_usd": null,
       "is_active": false,
@@ -2174,7 +2226,8 @@
       "status": "PROSPECT",
       "as_of_date": "2025-06-30",
       "source_tags": [
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: May 19, 2025"
       ],
       "market_value_usd": null,
       "is_active": false,
@@ -2218,7 +2271,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.10%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: March 9, 2017"
       ],
       "market_value_usd": null,
       "is_active": true,
@@ -2263,7 +2317,8 @@
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
         "Segment: HNW",
-        "Tags: Held Away"
+        "Tags: Held Away",
+        "Client Since: October 4, 2016"
       ],
       "market_value_usd": null,
       "is_active": true,
@@ -2309,7 +2364,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: March 11, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -2341,7 +2397,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: March 11, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -2373,7 +2430,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: July 22, 2014"
       ],
       "_provenance": {
         "client_id": {
@@ -2405,7 +2463,8 @@
       "source_tags": [
         "acquired from Harborline",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 2, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -2437,7 +2496,8 @@
       "source_tags": [
         "acquired from Harborline",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 2, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -2469,7 +2529,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 0.85%",
-        "Segment: Corporate"
+        "Segment: Corporate",
+        "Client Since: May 30, 2018"
       ],
       "_provenance": {
         "client_id": {
@@ -2499,7 +2560,8 @@
       "last_name": "Fairbanks",
       "role": "PRIMARY",
       "source_tags": [
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: May 14, 2025"
       ],
       "_provenance": {
         "client_id": {
@@ -2531,7 +2593,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: January 19, 2017"
       ],
       "_provenance": {
         "client_id": {
@@ -2563,7 +2626,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 0.85%",
-        "Segment: High Net Worth"
+        "Segment: High Net Worth",
+        "Client Since: September 8, 2015"
       ],
       "_provenance": {
         "client_id": {
@@ -2595,7 +2659,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: April 27, 2013"
       ],
       "_provenance": {
         "client_id": {
@@ -2627,7 +2692,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: April 27, 2013"
       ],
       "_provenance": {
         "client_id": {
@@ -2659,7 +2725,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: February 10, 2018"
       ],
       "_provenance": {
         "client_id": {
@@ -2691,7 +2758,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: June 15, 2020"
       ],
       "_provenance": {
         "client_id": {
@@ -2723,7 +2791,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: March 22, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -2755,7 +2824,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.10%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: November 5, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -2787,7 +2857,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: January 30, 2021"
       ],
       "_provenance": {
         "client_id": {
@@ -2819,7 +2890,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: July 19, 2017"
       ],
       "_provenance": {
         "client_id": {
@@ -2851,7 +2923,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: Tier 1",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: May 12, 2015"
       ],
       "_provenance": {
         "client_id": {
@@ -2883,7 +2956,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: September 1, 2022"
       ],
       "_provenance": {
         "client_id": {
@@ -2911,11 +2985,12 @@
       "household_id": "HH-ABRAMSON",
       "first_name": "Rachel",
       "last_name": "Abramson",
-      "role": "SPOUSE",
+      "role": "PRIMARY",
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: April 18, 2014"
       ],
       "_provenance": {
         "client_id": {
@@ -2931,10 +3006,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Rachel Abramson 9b089ad6bf202bf936f3c33e84cce4ef.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Rachel Abramson",
-          "method": "LLM_DOC_MINING",
-          "confidence": 0.98,
+          "method": "DEFAULT_PRIMARY",
+          "confidence": 0.9,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Daniel Abramson' from Notion page body"
+          "reasoning": "Primary contact for household"
         }
       }
     },
@@ -2943,11 +3018,12 @@
       "household_id": "HH-ABRAMSON",
       "first_name": "Daniel",
       "last_name": "Abramson",
-      "role": "SPOUSE",
+      "role": "PRIMARY",
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: April 18, 2014"
       ],
       "_provenance": {
         "client_id": {
@@ -2963,10 +3039,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Daniel Abramson 4ba2faf64b4de6f737705ff14e071684.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Daniel Abramson",
-          "method": "LLM_DOC_MINING",
-          "confidence": 0.98,
+          "method": "DEFAULT_PRIMARY",
+          "confidence": 0.9,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Rachel Abramson' from Notion page body"
+          "reasoning": "Primary contact for household"
         }
       }
     },
@@ -2979,7 +3055,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: December 3, 2020"
       ],
       "_provenance": {
         "client_id": {
@@ -3011,7 +3088,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: August 27, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -3043,7 +3121,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: February 14, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -3071,11 +3150,12 @@
       "household_id": "HH-SULLIVAN",
       "first_name": "Megan",
       "last_name": "Sullivan",
-      "role": "SPOUSE",
+      "role": "PRIMARY",
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: October 9, 2018"
       ],
       "_provenance": {
         "client_id": {
@@ -3091,10 +3171,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Megan Sullivan aa1edf11a0770e2af49acb0bf2ba8041.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Megan Sullivan",
-          "method": "LLM_DOC_MINING",
-          "confidence": 0.98,
+          "method": "DEFAULT_PRIMARY",
+          "confidence": 0.9,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Tom Sullivan' from Notion page body"
+          "reasoning": "Primary contact for household"
         }
       }
     },
@@ -3103,11 +3183,12 @@
       "household_id": "HH-SULLIVAN",
       "first_name": "Tom",
       "last_name": "Sullivan",
-      "role": "SPOUSE",
+      "role": "PRIMARY",
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: October 9, 2018"
       ],
       "_provenance": {
         "client_id": {
@@ -3123,10 +3204,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Tom Sullivan 6fb0ea7fb3fdb4f3e66e121db61fa8cc.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Tom Sullivan",
-          "method": "LLM_DOC_MINING",
-          "confidence": 0.98,
+          "method": "DEFAULT_PRIMARY",
+          "confidence": 0.9,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Megan Sullivan' from Notion page body"
+          "reasoning": "Primary contact for household"
         }
       }
     },
@@ -3139,7 +3220,9 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.10%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Referred By: Gregory Palme",
+        "Client Since: June 21, 2021"
       ],
       "_provenance": {
         "client_id": {
@@ -3171,7 +3254,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: March 15, 2023"
       ],
       "_provenance": {
         "client_id": {
@@ -3203,7 +3287,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: November 28, 2017"
       ],
       "_provenance": {
         "client_id": {
@@ -3233,7 +3318,8 @@
       "last_name": "Costa",
       "role": "PRIMARY",
       "source_tags": [
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: June 1, 2025"
       ],
       "_provenance": {
         "client_id": {
@@ -3263,7 +3349,8 @@
       "last_name": "Bauer",
       "role": "PRIMARY",
       "source_tags": [
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: May 20, 2025"
       ],
       "_provenance": {
         "client_id": {
@@ -3296,7 +3383,8 @@
         "acquired from Harborline",
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 2, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -3329,7 +3417,8 @@
         "acquired from Harborline",
         "Risk Profile: Conservative",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 2, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -3361,7 +3450,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: Tier 1",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: March 3, 2018"
       ],
       "_provenance": {
         "client_id": {
@@ -3393,7 +3483,8 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.10%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: July 12, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -3425,7 +3516,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: June 8, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -3457,7 +3549,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: February 2, 2015"
       ],
       "_provenance": {
         "client_id": {
@@ -3489,7 +3582,9 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Referred By: Seminar 2023",
+        "Client Since: January 14, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -3521,7 +3616,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: August 9, 2021"
       ],
       "_provenance": {
         "client_id": {
@@ -3553,7 +3649,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: April 3, 2018"
       ],
       "_provenance": {
         "client_id": {
@@ -3586,7 +3683,8 @@
         "Risk Profile: Aggressive",
         "Fee Schedule: 0.85% – negotiated",
         "Segment: HNW",
-        "Tags: VIP"
+        "Tags: VIP",
+        "Client Since: September 20, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -3618,7 +3716,8 @@
       "source_tags": [
         "Risk Profile: Growth",
         "Fee Schedule: Tier 2",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: February 27, 2017"
       ],
       "_provenance": {
         "client_id": {
@@ -3650,7 +3749,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: See LOE",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: November 11, 2020"
       ],
       "_provenance": {
         "client_id": {
@@ -3683,7 +3783,8 @@
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
         "Segment: HNW",
-        "Tags: Do Not Contact"
+        "Tags: Do Not Contact",
+        "Client Since: May 6, 2015"
       ],
       "_provenance": {
         "client_id": {
@@ -3715,7 +3816,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 0.85%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: July 30, 2022"
       ],
       "_provenance": {
         "client_id": {
@@ -3748,7 +3850,8 @@
         "Risk Profile: Moderate",
         "Fee Schedule: Tier 1",
         "Segment: HNW",
-        "Tags: Deceased"
+        "Tags: Deceased",
+        "Client Since: March 18, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -3780,7 +3883,8 @@
       "source_tags": [
         "Risk Profile: Balanced",
         "Fee Schedule: 1.10%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: October 22, 2019"
       ],
       "_provenance": {
         "client_id": {
@@ -3812,7 +3916,8 @@
       "source_tags": [
         "Risk Profile: Conservative",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: January 8, 2018"
       ],
       "_provenance": {
         "client_id": {
@@ -3844,7 +3949,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 0.85%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: June 15, 2017"
       ],
       "_provenance": {
         "client_id": {
@@ -3876,7 +3982,9 @@
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: Tier 1",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Referred By: Emily Harrington",
+        "Client Since: December 1, 2020"
       ],
       "_provenance": {
         "client_id": {
@@ -3909,7 +4017,8 @@
         "Risk Profile: Conservative",
         "Fee Schedule: 1.10%",
         "Segment: HNW",
-        "Tags: VIP, ESG"
+        "Tags: VIP, ESG",
+        "Client Since: April 26, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -3941,7 +4050,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.00%",
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: August 3, 2023"
       ],
       "_provenance": {
         "client_id": {
@@ -3971,7 +4081,8 @@
       "last_name": "Vargas",
       "role": "PRIMARY",
       "source_tags": [
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: June 2, 2025"
       ],
       "_provenance": {
         "client_id": {
@@ -4001,7 +4112,8 @@
       "last_name": "Nwosu",
       "role": "PRIMARY",
       "source_tags": [
-        "Segment: Mass Affluent"
+        "Segment: Mass Affluent",
+        "Client Since: May 19, 2025"
       ],
       "_provenance": {
         "client_id": {
@@ -4033,7 +4145,8 @@
       "source_tags": [
         "Risk Profile: Moderate",
         "Fee Schedule: 1.10%",
-        "Segment: HNW"
+        "Segment: HNW",
+        "Client Since: March 9, 2017"
       ],
       "_provenance": {
         "client_id": {
@@ -4066,7 +4179,8 @@
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
         "Segment: HNW",
-        "Tags: Held Away"
+        "Tags: Held Away",
+        "Client Since: October 4, 2016"
       ],
       "_provenance": {
         "client_id": {
@@ -4270,10 +4384,10 @@
           "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
           "source_location": "Row 6",
           "source_raw_value": "G. Whitfield",
-          "method": "LLM_AGENT_DISAMBIGUATION",
-          "confidence": 0.9,
+          "method": "ONOMASTIC_ALIAS_RESOLUTION",
+          "confidence": 0.95,
           "rule_or_agent": "ENTITY_RESOLVER_AGENT",
-          "reasoning": "The account holder 'G. Whitfield' is a clear initial + surname match for 'George Whitfield' in the known clients list. The surname 'Whitfield' is unique in the provided client list, increasing confidence."
+          "reasoning": "'G. Whitfield' matched to 'George Whitfield' via nickname/diminutive resolution ('g.' -> 'george')."
         },
         "market_value_usd": {
           "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
@@ -5336,6 +5450,45 @@
           "confidence": 1.0,
           "rule_or_agent": "RULE_FOREIGN_CURRENCY_USD_REPORTING",
           "reasoning": "Converted 2,100,000.00 CHF to USD @ 1.1140 (Q2 2025 benchmark rate)"
+        }
+      }
+    },
+    {
+      "account_id": "ACC-CU-6023",
+      "household_id": "HH-FITZGERALD",
+      "account_type": "INDIVIDUAL",
+      "market_value_usd": 880000.0,
+      "currency_original": "USD",
+      "as_of_date": "2025-06-30",
+      "custodian": "Schwab",
+      "account_holder_raw": "Bill Fitzgerald",
+      "_provenance": {
+        "account_id": {
+          "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
+          "source_location": "Row 35",
+          "source_raw_value": "CU-6023",
+          "method": "CANONICAL_ID_GEN",
+          "confidence": 1.0,
+          "rule_or_agent": "CUSTODIAN_INGESTION",
+          "reasoning": ""
+        },
+        "household_id": {
+          "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
+          "source_location": "Row 35",
+          "source_raw_value": "Bill Fitzgerald",
+          "method": "ONOMASTIC_ALIAS_RESOLUTION",
+          "confidence": 0.95,
+          "rule_or_agent": "ENTITY_RESOLVER_AGENT",
+          "reasoning": "'Bill Fitzgerald' matched to 'William Fitzgerald' via nickname/diminutive resolution ('bill' -> 'william')."
+        },
+        "market_value_usd": {
+          "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
+          "source_location": "Row 35",
+          "source_raw_value": "880000",
+          "method": "DETERMINISTIC_DIRECT",
+          "confidence": 1.0,
+          "rule_or_agent": "DIRECT_BALANCE",
+          "reasoning": "USD market value direct from custodian"
         }
       }
     },
