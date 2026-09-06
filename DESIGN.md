@@ -96,7 +96,12 @@ Institutional rules are extracted from `ops_slack_thread.md` via thread-segmente
 | `RULE_DEDUPLICATION` | "Known duplicate, collapse them" | Deduplication via `metadata.duplicate_variants` | Remove rule to split entities on next sync. |
 | `RULE_CHURNED_CLIENT` | "Left in 2023, don't count toward AUM" | `status='INACTIVE'`, `active_aum_usd=0.0`, `market_value_usd=12400.0` | Setting status to `ACTIVE` restores billing AUM. |
 
-**Runtime Governance**: Human-in-the-loop (HITL) decisions submitted via `POST /api/clarifications/resolve` persist as versioned `KnowledgeRule` records in SQLite, ensuring decisions survive server restarts and reapply on future syncs.
+### Automated Sync Application & Staleness Lifecycle
+* **Automatic Encoding on Next Sync**: Rules extracted by `KnowledgeMiningAgent` are serialized as structured entities with 768-dimensional embeddings (`text-embedding-004`) into a persistent SQLite store (`outputs/knowledge_store.db`). On every subsequent sync execution (`python3 run_pipeline.py` or API run), `KnowledgeEngine.load_rules()` rehydrates these rules into memory before entity resolution, guaranteeing deterministic, zero-prompt reapplication across runs.
+* **Correction When a Rule is Wrong**: 
+  1. *Human-in-the-Loop Override*: When an operator corrects an assignment via the Web Dashboard or `POST /api/clarifications/resolve`, an authoritative `manual_override` rule is committed to SQLite, which takes absolute precedence over mined rules on future syncs.
+  2. *Configuration Flags*: Architectural rules (e.g. advisor precedence, FX benchmarks) are decoupled into `config.py` (`allow_service_rep_fallback = False`), preventing pipeline-wide drift.
+* **Staleness & Superseded Rules**: When the client updates their Slack thread or operations policy, re-running knowledge mining performs cosine similarity deduplication against existing embeddings. Rules matching $\ge 0.90$ semantic similarity update the existing record with an incremented version and timestamp rather than spawning duplicate or conflicting directives. Stale rules can also be marked inactive directly in SQLite.
 
 ---
 
