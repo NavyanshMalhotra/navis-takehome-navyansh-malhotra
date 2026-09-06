@@ -2709,8 +2709,8 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Sarah Thompson 4333491d3e3d9970dcc44a35f46ac83f.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Sarah Thompson",
-          "method": "LLM_DOC_MINING",
-          "confidence": 0.98,
+          "method": "DEFAULT_PRIMARY",
+          "confidence": 0.9,
           "rule_or_agent": "ROLE_ASSIGNMENT",
           "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
@@ -3042,7 +3042,7 @@
           "method": "LLM_DOC_MINING",
           "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Rachel Abramson' from Notion page body"
+          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
       }
     },
@@ -3174,7 +3174,7 @@
           "method": "LLM_DOC_MINING",
           "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Tom Sullivan' from Notion page body"
+          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
       }
     },
@@ -3207,7 +3207,7 @@
           "method": "LLM_DOC_MINING",
           "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
+          "reasoning": "Identified as spouse/wife of 'Megan Sullivan' from Notion page body"
         }
       }
     },
@@ -4423,10 +4423,10 @@
           "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
           "source_location": "Row 7",
           "source_raw_value": "Nakamura Holdings LLC",
-          "method": "DOC_MINER_AFFILIATION_MATCH",
-          "confidence": 0.93,
+          "method": "LLM_AGENT_DISAMBIGUATION",
+          "confidence": 0.9,
           "rule_or_agent": "ENTITY_RESOLVER_AGENT",
-          "reasoning": "Entity 'Nakamura Holdings LLC' matched to client 'Kenji Nakamura' via CRM dossier notes."
+          "reasoning": "The custodian account 'Nakamura Holdings LLC' is a corporate entity. The client roster contains 'Kenji Nakamura' in household 'HH-NAKAMURA'. It is a common practice for a single individual to own and operate an LLC bearing their surname, making 'Kenji Nakamura' the most plausible owning individual. Source account type also indicates 'Corporate'."
         },
         "market_value_usd": {
           "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",

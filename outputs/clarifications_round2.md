@@ -4,9 +4,9 @@ Hi Dana,
 
 Thank you for your prompt and detailed responses to our Round 1 clarifications. Your input was incredibly helpful and allowed us to make significant progress.
 
-We've now compiled a second round of items that require your expertise. As before, each item is structured to be as clear and actionable as possible, with a proposed default action for efficiency.
+We've now compiled a second list of items that require your expertise to ensure accuracy and a smooth go-live. We've structured these to be concise and actionable, aiming to make your review as efficient as possible.
 
-Please review the following and let us know your decisions.
+Here are the Round 2 Clarifications:
 
 ---
 
@@ -75,9 +75,14 @@ Please review the following and let us know your decisions.
 
 ---
 
-To streamline your response, you can simply reply with the item ID and your choice (e.g., "CLARIF-ADV-HH-DELGADO: (b)" or "CLARIF-ACC-CU-5010: Approved as proposed").
+To respond, you can simply reply with "Approved as proposed" or list your choices by ID. For example:
 
-Please let us know if you have any questions or require further context on any of these points.
+*CLARIF-ADV-HH-DELGADO: (b)*
+*CLARIF-ADV-HH-WHITFIELD: (a)*
+*Approved as proposed for all others.*
 
-Thanks,
-Nevis Onboarding Team
+Please let us know if you have any questions or require further context on any of these items.
+
+Best regards,
+
+The Nevis Onboarding Team
