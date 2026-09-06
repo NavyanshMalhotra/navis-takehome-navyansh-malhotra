@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nevis — Canonical Data Platform</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body>
 
   <!-- Masthead -->
@@ -14,7 +16,7 @@
       <div class="masthead-left">
         <h1 class="brand-title">Nevis</h1>
         <div class="brand-subtitle">
-          Onboarding Data Platform &bull; Firm: <span class="tenant" id="tenantFirmName">Loading...</span>
+          Onboarding Data Platform &bull</span>
         </div>
       </div>
       <div class="masthead-right">
@@ -75,7 +77,8 @@
       <button class="view-tab" onclick="switchTab('triage')">
         Clarifications Queue <span class="tab-badge" id="triageBadge">—</span>
       </button>
-      <button class="view-tab" onclick="switchTab('audit')">Rules &amp; Invariants (<span id="auditTabSummary">—</span>)</button>
+      <button class="view-tab" onclick="switchTab('audit')">Rules &amp; Invariants (<span
+          id="auditTabSummary">—</span>)</button>
       <button class="view-tab" onclick="switchTab('slack')">Slack Message Export</button>
     </nav>
 
@@ -83,13 +86,19 @@
     <section id="view-canonical" class="view-pane active">
       <div class="panel-controls">
         <div class="entity-subnav">
-          <button class="entity-btn active" onclick="filterEntityType('households')">Households (<span id="countHh">—</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('clients')">Clients (<span id="countCli">—</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('accounts')">Accounts (<span id="countAcc">—</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('advisors')">Advisors (<span id="countAdv">—</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('interactions')">Interactions (<span id="countInt">—</span>)</button>
+          <button class="entity-btn active" onclick="filterEntityType('households')">Households (<span
+              id="countHh">—</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('clients')">Clients (<span
+              id="countCli">—</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('accounts')">Accounts (<span
+              id="countAcc">—</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('advisors')">Advisors (<span
+              id="countAdv">—</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('interactions')">Interactions (<span
+              id="countInt">—</span>)</button>
         </div>
-        <input type="text" id="canonicalSearch" class="search-input" placeholder="Filter records by name, ID, custodian..." oninput="handleCanonicalSearch()">
+        <input type="text" id="canonicalSearch" class="search-input"
+          placeholder="Filter records by name, ID, custodian..." oninput="handleCanonicalSearch()">
       </div>
 
       <div class="table-wrapper">
@@ -105,7 +114,8 @@
       <div class="panel-controls triage-header-block">
         <div>
           <h2>Human-in-the-Loop Clarification Queue</h2>
-          <p>Unsettled discrepancies prepared for <span class="opLeadName">Operations Lead</span>. Operators can confirm proposed defaults or assign relationships directly.</p>
+          <p>Unsettled discrepancies prepared for <span class="opLeadName">Operations Lead</span>. Operators can confirm
+            proposed defaults or assign relationships directly.</p>
         </div>
         <button class="btn btn-secondary" onclick="copySlackMessage()">Copy Message to Clipboard</button>
       </div>
@@ -142,7 +152,8 @@
     <section id="view-slack" class="view-pane">
       <div class="slack-box">
         <div class="slack-box-header">
-          <div class="slack-channel-name">#nevis-onboarding &bull; Target: <span class="opLeadName">Head of Operations</span></div>
+          <div class="slack-channel-name">#nevis-onboarding &bull; Target: <span class="opLeadName">Head of
+              Operations</span></div>
           <button class="btn btn-primary" onclick="copySlackMessage()">Copy Message Text</button>
         </div>
         <pre class="slack-text-render" id="slackMarkdownContent">Loading Slack export...</pre>
@@ -170,4 +181,5 @@
 
   <script src="/static/app.js"></script>
 </body>
+
 </html>
