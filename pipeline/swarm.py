@@ -1,6 +1,6 @@
 """
-Google ADK Multi-Agent Swarm Orchestrator for Nevis Platform.
-Coordinates specialized agents across ingestion, knowledge mining, entity resolution,
+DAG LLM Pipeline Orchestrator for Nevis Platform.
+Coordinates specialized modular stages across ingestion, knowledge mining, entity resolution,
 canonical mapping, reflective auditing, and clarification synthesis with OpenTelemetry tracing.
 """
 
@@ -42,10 +42,10 @@ class SwarmExecutionResult:
 
 
 class NevisSwarmOrchestrator(BaseAgent):
-    """Orchestrates the swarm of Google ADK agents for wealth data onboarding."""
+    """Orchestrates the DAG LLM pipeline for wealth data onboarding."""
 
     name: str = "NevisSwarmOrchestrator"
-    description: str = "Coordinates multi-agent ingestion, disambiguation, mapping, audit, and output synthesis."
+    description: str = "Coordinates DAG pipeline ingestion, disambiguation, mapping, audit, and output synthesis."
 
     def __init__(self, **data):
         super().__init__(**data)

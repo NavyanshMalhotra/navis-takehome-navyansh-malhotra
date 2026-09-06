@@ -32,7 +32,7 @@ from pipeline.llm_client import llm_client
 
 def run_pipeline() -> int:
     print("=" * 80)
-    print("NEVIS AGENTIC DATA ONBOARDING PIPELINE (GOOGLE ADK SWARM)")
+    print("NEVIS DATA ONBOARDING (DAG LLM PIPELINE)")
     print(f"Target Firm: {config.firm_name}")
     print("=" * 80)
 
@@ -42,11 +42,11 @@ def run_pipeline() -> int:
         print("Provider: Offline Deterministic Fallback Mode (Set GEMINI_API_KEY for live reasoning)")
 
     orchestrator = NevisSwarmOrchestrator()
-    print("\nExecuting Google ADK Agent Swarm...")
+    print("\nExecuting DAG LLM Pipeline...")
     try:
         result = orchestrator.run(write_artifacts=True)
     except Exception as exc:
-        print(f"\n[ERROR] Swarm execution failed: {exc}")
+        print(f"\n[ERROR] Pipeline execution failed: {exc}")
         return 1
 
     bundle = result.bundle

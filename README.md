@@ -1,6 +1,6 @@
-# Nevis FDE — Agentic Data Onboarding Platform
+# Nevis FDE — DAG LLM Data Onboarding Platform
 
-Multi-agent onboarding engine built with the **Google Agent Development Kit (`google-adk` 2.8.0)** and **Google GenAI SDK** (`gemini-2.5-flash` + `text-embedding-004`), with distributed **OpenTelemetry** tracing and active reflective auditing. Ingests heterogeneous RIA records (Notion CRM, custodian XLSX, advisor roster, and Slack communications) into the Nevis canonical wealth schema with 1,067 field-level provenance audit trails.
+Modular DAG LLM onboarding pipeline built with the **Google Agent Development Kit (`google-adk` 2.8.0)** and **Google GenAI SDK** (`gemini-2.5-flash` + `text-embedding-004`), with distributed **OpenTelemetry** tracing and active reflective auditing. Ingests heterogeneous RIA records (Notion CRM, custodian XLSX, advisor roster, and Slack communications) into the Nevis canonical wealth schema with 1,067 field-level provenance audit trails.
 
 ---
 
@@ -37,7 +37,7 @@ python3 run_server.py
 In real-world RIA onboarding, automated transformation requires operational review. The web dashboard serves as an interactive console for Forward Deployed Engineers and RIA operations leads:
 1. **Inspect Field-Level Lineage**: Click any row in Households, Clients, Accounts, Advisors, or Interactions to open the slide-out provenance drawer. Displays source file, row location, extraction method, raw input value, reasoning, and confidence score.
 2. **Resolve Clarifications Interactively (HITL)**: Triage the 7 unsettled discrepancies queued for Dana Ruiz (Head of Operations). Operators can confirm recommended defaults or assign advisors with 1 click. Resolutions persist directly to SQLite (`outputs/knowledge_store.db`) and reapply automatically on future syncs.
-3. **Execute Live Pipeline Runs**: Click **"Execute Sync Pipeline"** in the masthead to re-run the agent swarm from the browser. The server tracks file modification timestamps (`st_mtime`) and hot-reloads updated output files without restarting.
+3. **Execute Live Pipeline Runs**: Click **"Execute Sync Pipeline"** in the masthead to re-run the DAG LLM pipeline from the browser. The server tracks file modification timestamps (`st_mtime`) and hot-reloads updated output files without restarting.
 4. **Export Slack Communications**: View and copy the formatted Round 2 Slack message directly from the UI for posting to `#nevis-onboarding`.
 
 ### Testing a Clean Run From Scratch
@@ -56,15 +56,15 @@ python3 run_pipeline.py
 |---|---|---|
 | **Canonical Store** | `outputs/canonical_output.json` | 52 Households, 56 Clients, 51 Accounts, 7 Advisors, 17 Interactions with 1,067 field-level `_provenance` records. 100% compliance across 8 invariant rules. |
 | **Round 2 Message** | `outputs/clarifications_round2.md` | Customer-ready follow-up to Dana Ruiz (Head of Operations) covering exactly 7 scoped questions (Trigger, Evidence, Options, Proposed Default). Concludes with a 1-line approval template. |
-| **Design Specification** | `DESIGN.md` | Multi-agent swarm topology, trade-offs, domain findings, and Slack rules lifecycle. |
-| **Telemetry Traces** | `outputs/telemetry_traces.json` | OpenTelemetry spans tracking latency, status, and metadata across all agents and tools. |
+| **Design Specification** | `DESIGN.md` | DAG LLM pipeline topology, trade-offs, domain findings, and Slack rules lifecycle. |
+| **Telemetry Traces** | `outputs/telemetry_traces.json` | OpenTelemetry spans tracking latency, status, and metadata across all pipeline stages and tools. |
 | **Knowledge Store** | `outputs/knowledge_store.db` | SQLite store persisting extracted business rules, vector embeddings, and operator HITL resolutions. |
 
 ---
 
-## Agent Swarm Architecture
+## DAG LLM Pipeline Architecture
 
-Orchestrated via `NevisSwarmOrchestrator` (`pipeline/swarm.py`):
+Orchestrated via `NevisSwarmOrchestrator` (`pipeline/swarm.py`) as a modular Directed Acyclic Graph (DAG):
 
 ```
 Source Ingestion → Knowledge Mining → Dossier Mining → Entity Resolution → Canonical Transformation → Reflective Audit → Deliverable Synthesis
@@ -72,7 +72,7 @@ Source Ingestion → Knowledge Mining → Dossier Mining → Entity Resolution �
                                                                  +---------------- (Auto-Remediation Loop) ----+
 ```
 
-| Agent | Module | Base Class | Specialized Role |
+| Pipeline Stage / Agent | Module | Base Class | Specialized Role |
 |---|---|---|---|
 | `KnowledgeMiningAgent` | `pipeline/knowledge_layer.py` | `google.adk.BaseAgent` | Extracts Slack rules, generates 768-dim embeddings (`text-embedding-004`), deduplicates via cosine similarity. |
 | `DossierMinerAgent` | `pipeline/doc_miner.py` | `google.adk.BaseAgent` | Mines Notion page bodies for spousal relationships, entity affiliations, and unregistered prospect leads. |
@@ -80,7 +80,7 @@ Source Ingestion → Knowledge Mining → Dossier Mining → Entity Resolution �
 | `CanonicalTransformerAgent` | `pipeline/transformer.py` | `google.adk.BaseAgent` | Synthesizes collision-proof households, normalizes accounts, executes FX conversion, calculates dual-metric AUM, and attaches field provenance. |
 | `AuditorReflectionAgent` | `pipeline/auditor.py` | `google.adk.BaseAgent` | Audits Rules 1–8; executes reflective remediation loop to quarantine and re-route unmapped accounts and interactions. |
 | `ClarificationAgent` | `pipeline/output_generator.py` | `google.adk.BaseAgent` | Serializes canonical JSON and drafts customer-ready Round 2 Slack message. |
-| `NevisSwarmOrchestrator` | `pipeline/swarm.py` | `google.adk.BaseAgent` | Coordinates swarm lifecycle and collects OpenTelemetry execution spans. |
+| `NevisSwarmOrchestrator` | `pipeline/swarm.py` | `google.adk.BaseAgent` | Coordinates DAG pipeline lifecycle and collects OpenTelemetry execution spans. |
 
 ---
 

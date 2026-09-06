@@ -126,7 +126,7 @@ class LLMClient:
 
     def generate_text(self, prompt: str, system_prompt: str = "") -> str:
         """
-        Executes a freeform agent generation call (e.g. for ReAct thoughts or clarification drafting).
+        Executes a freeform LLM generation call (e.g. for DAG pipeline stage reasoning or clarification drafting).
         """
         self._ensure_available()
 

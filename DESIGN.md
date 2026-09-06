@@ -2,12 +2,12 @@
 
 ## 1. Executive Summary & Framework Selection
 
-The Nevis Agentic Data Onboarding Pipeline transforms heterogeneous RIA books of record (Notion CRM exports, custodian XLSX positions, advisor rosters, and Slack communications) into the Nevis canonical wealth data model.
+The Nevis DAG LLM Data Onboarding Pipeline transforms heterogeneous RIA books of record (Notion CRM exports, custodian XLSX positions, advisor rosters, and Slack communications) into the Nevis canonical wealth data model.
 
-* **Agent Framework**: **Google Agent Development Kit (`google-adk` 2.8.0)** using the official **Google GenAI SDK** (`gemini-2.5-flash` + `text-embedding-004`).
-* **Why Google ADK**: Purpose-built for multi-agent systems with explicit agent lifecycles, typed tool contracts, and native OpenTelemetry integration. Avoids the abstraction bloat and hidden control flow of LangChain or AutoGen.
-* **Why Multi-Agent Swarm (vs. Monolithic Prompt)**: Financial data onboarding comprises fundamentally distinct cognitive tasks: unstructured communications analysis, document note mining, entity onomastics, deterministic data aggregation, and invariant validation. Isolating these tasks into dedicated sub-agents prevents prompt degradation, enforces strict deterministic boundaries for financial math, and enables independent retry and confidence routing.
-* **Orchestration**: `NevisSwarmOrchestrator` (`pipeline/swarm.py`) executes the agent DAG with a reflective feedback loop, callable via CLI (`python3 run_pipeline.py`) or REST API (`POST /api/pipeline/run`).
+* **Architecture**: **Modular Directed Acyclic Graph (DAG) LLM Pipeline** implemented using **Google Agent Development Kit (`google-adk` 2.8.0)** and the official **Google GenAI SDK** (`gemini-2.5-flash` + `text-embedding-004`).
+* **Why Google ADK**: Purpose-built for structured agentic stages with explicit lifecycles, typed tool contracts, and native OpenTelemetry integration. Avoids the abstraction bloat and hidden control flow of LangChain or AutoGen.
+* **Why Modular DAG Pipeline (vs. Monolithic Prompt or Dynamic Swarms)**: Financial data onboarding comprises fundamentally distinct cognitive tasks: unstructured communications analysis, document note mining, entity onomastics, deterministic data aggregation, and invariant validation. Isolating these tasks into a staged DAG pipeline prevents prompt degradation, eliminates chaotic non-deterministic inter-agent chatter, enforces strict deterministic boundaries for financial math, and enables independent retry and confidence routing.
+* **Orchestration**: `NevisSwarmOrchestrator` (`pipeline/swarm.py`) executes the DAG LLM pipeline with a reflective feedback loop, callable via CLI (`python3 run_pipeline.py`) or REST API (`POST /api/pipeline/run`).
 
 ```
 [Source Ingestion & Pre-Flight Validation]
@@ -27,9 +27,9 @@ The Nevis Agentic Data Onboarding Pipeline transforms heterogeneous RIA books of
 
 ---
 
-## 2. Implemented Multi-Agent Architecture
+## 2. Implemented DAG LLM Architecture
 
-| Agent | Module | Base Class | Specialized Responsibility |
+| Pipeline Stage / Agent | Module | Base Class | Specialized Responsibility |
 |---|---|---|---|
 | `KnowledgeMiningAgent` | `pipeline/knowledge_layer.py` | `google.adk.BaseAgent` | Extracts institutional rules from Slack threads via Gemini, computes 768-dim embeddings (`text-embedding-004`), and maintains an indexed SQLite store with cosine deduplication (≥0.90 similarity updates existing rules). |
 | `DossierMinerAgent` | `pipeline/doc_miner.py` | `google.adk.BaseAgent` | Mines unstructured client page dossiers and meeting notes for spousal relationships, entity affiliations, and unlisted prospect leads. |
@@ -37,7 +37,7 @@ The Nevis Agentic Data Onboarding Pipeline transforms heterogeneous RIA books of
 | `CanonicalTransformerAgent` | `pipeline/transformer.py` | `google.adk.BaseAgent` | Synthesizes collision-proof households, normalizes accounts and interactions, executes benchmark FX conversions, computes dual-metric AUM, and attaches 1,067 field-level provenance audit trails. |
 | `AuditorReflectionAgent` | `pipeline/auditor.py` | `google.adk.BaseAgent` | Evaluates Rules 1–8; executes reflective remediation to isolate anomalies and quarantine unresolvable records into triage queues. |
 | `ClarificationAgent` | `pipeline/output_generator.py` | `google.adk.BaseAgent` | Serializes canonical JSON and formats customer-facing Round 2 Slack communication for operations leadership. |
-| `NevisSwarmOrchestrator` | `pipeline/swarm.py` | `google.adk.BaseAgent` | Coordinates agent lifecycles, collects OpenTelemetry spans, and exports execution telemetry. |
+| `NevisSwarmOrchestrator` | `pipeline/swarm.py` | `google.adk.BaseAgent` | Coordinates DAG pipeline lifecycles, collects OpenTelemetry spans, and exports execution telemetry. |
 
 ---
 
@@ -109,7 +109,7 @@ Institutional rules are extracted from `ops_slack_thread.md` via thread-segmente
 
 1. **Headless CLI / API Mode** (`python3 run_pipeline.py` or `POST /api/pipeline/run`):
    * Designed for automated data syncs, scheduled cron jobs, and CI/CD validation.
-   * Runs pre-flight validation, executes the multi-agent swarm, performs invariant audits, and outputs artifacts.
+   * Runs pre-flight validation, executes the DAG LLM pipeline, performs invariant audits, and outputs artifacts.
 2. **Interactive Web Dashboard** (`python3 run_server.py` at `http://localhost:8000`):
    * Designed for Forward Deployed Engineers and RIA operations leads.
    * Provides drill-down inspection into all 1,067 field provenance records, visible confidence indicators across all entities, 1-click HITL resolution of open clarifications, live OpenTelemetry span visualizer, and file modification timestamp (`st_mtime`) auto-reload.
@@ -137,3 +137,21 @@ Institutional rules are extracted from `ops_slack_thread.md` via thread-segmente
    * Structured format: **Trigger**, **Evidence**, **Candidate Options**, and **Proposed Default**, with a 1-line approval template.
 3. **`outputs/telemetry_traces.json`**: Complete trace spans detailing all agent and tool invocations.
 4. **`outputs/knowledge_store.db`**: SQLite database persisting institutional rules, vector embeddings, and operator resolutions.
+
+---
+
+## 10. Next Steps & Production Roadmap
+
+### 10.1 Agent-to-Agent (A2A) Swarm with ReAct
+* **Dynamic Exception Handling**: Evolve from the current procedural DAG into an event-driven A2A mesh for unresolved edge cases.
+* **ReAct Loops for Complex Disambiguation**: Equip sub-agents with iterative `Thought → Action → Observation` loops and inter-agent tool contracts (e.g., `EntityResolverAgent` dynamically querying `DossierMinerAgent` for targeted CRM snippet lookups when encountering ambiguous trust grantors, or `AuditorReflectionAgent` negotiating constraints with `CanonicalTransformerAgent`).
+
+### 10.2 Cloud Deployment Architecture
+* **Serverless Containerization**: Package pipeline workers and FastAPI console into OCI-compliant containers deployed to Google Cloud Run or AWS ECS/Fargate.
+* **Workflow Orchestration**: Replace in-process orchestration with Temporal, Google Cloud Workflows, or AWS Step Functions for distributed state persistence, automatic retries, and failure recovery across multi-hour onboarding runs.
+* **Enterprise Security**: Store custodian credentials and GenAI API keys in GCP Secret Manager / AWS Secrets Manager; enforce IAM role-based least privilege.
+
+### 10.3 Scalability & Core Updates Needed
+* **Database Migration**: Transition local SQLite (`outputs/knowledge_store.db`) to managed PostgreSQL + `pgvector` (or Google Cloud SQL / Vertex AI Vector Search) to support concurrent multi-tenant onboarding syncs.
+* **Streaming & Partitioned Ingestion**: Upgrade custodian XLSX/CSV ingestion from single-node memory to streaming chunked processing over partitioned object storage (GCS / S3) paired with Celery / Pub/Sub workers to scale to 100,000+ positions.
+* **Enterprise Observability & Eval**: Route OpenTelemetry OTLP spans to Datadog APM or Google Cloud Trace; implement automated LLM-as-a-judge regression evaluation benchmarks to detect schema drift before deployment.
