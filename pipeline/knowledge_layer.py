@@ -1,7 +1,7 @@
 """
 Knowledge Layer & Declarative Business Rules Engine.
 Extracts operational business rules from stakeholder communications (Dana Ruiz's Slack Round 1)
-using Google Gemini, generates vector embeddings with text-embedding-004, persists them
+using Google GenAI models, generates vector embeddings with text-embedding-004, persists them
 to SQLite, and provides both deterministic lookup and semantic similarity retrieval.
 """
 
@@ -10,9 +10,12 @@ import logging
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional, Tuple
+
+from google.adk.agents import BaseAgent
 from config import config
 from pipeline.llm_client import llm_client
 from pipeline.agent_tools import knowledge_db
+from pipeline.telemetry import telemetry
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +27,7 @@ class KnowledgeRule:
     description: str
     stakeholder: str
     source_reference: str
-    scope: str  # "CLIENT_SPECIFIC" | "CROSS_CLIENT_REUSABLE"
+    scope: str
     metadata: Dict[str, Any] = field(default_factory=dict)
     embedding: Optional[List[float]] = None
 
@@ -40,43 +43,41 @@ class KnowledgeRule:
         }
 
 
-class KnowledgeEngine:
-    def __init__(self, slack_path: Optional[Path] = None, force_refresh: bool = False):
-        self.rules: Dict[str, KnowledgeRule] = {}
-        self.slack_path = slack_path or (config.sources_dir / "ops_slack_thread.md")
+class KnowledgeMiningAgent(BaseAgent):
+    """Google ADK agent that extracts, indexes, and retrieves institutional business rules."""
+
+    name: str = "KnowledgeMiningAgent"
+    description: str = "Extracts and retrieves institutional knowledge rules from Slack and documentation."
+
+    def __init__(self, slack_path: Optional[Path] = None, force_refresh: bool = False, **data):
+        super().__init__(**data)
+        object.__setattr__(self, "rules", {})
+        object.__setattr__(self, "slack_path", slack_path or (config.sources_dir / "ops_slack_thread.md"))
         self.load_rules(force_refresh=force_refresh)
 
     def load_rules(self, force_refresh: bool = False):
-        """
-        Loads rules from local SQLite cache if available; otherwise uses LLM
-        to extract rules from the Slack conversation and embed them with Google text-embedding-004.
-        """
-        cached_rules = knowledge_db.get_all_rules()
-        if cached_rules and not force_refresh:
-            logger.info("Loading %d operational rules from SQLite knowledge cache.", len(cached_rules))
-            for r in cached_rules:
-                rule = KnowledgeRule(
-                    rule_id=r["rule_id"],
-                    category=r["category"],
-                    description=r["description"],
-                    stakeholder=r["stakeholder"],
-                    source_reference=r["source_reference"],
-                    scope=r["scope"],
-                    metadata=r["metadata"],
-                    embedding=r.get("embedding"),
-                )
-                self.rules[rule.rule_id] = rule
-            return
+        """Loads rules from SQLite cache or extracts dynamically via LLM."""
+        with telemetry.trace_agent(self.name, action="load_rules"):
+            cached_rules = knowledge_db.get_all_rules()
+            if cached_rules and not force_refresh:
+                logger.info("Loading %d operational rules from SQLite cache.", len(cached_rules))
+                for r in cached_rules:
+                    rule = KnowledgeRule(
+                        rule_id=r["rule_id"],
+                        category=r["category"],
+                        description=r["description"],
+                        stakeholder=r["stakeholder"],
+                        source_reference=r["source_reference"],
+                        scope=r["scope"],
+                        metadata=r["metadata"],
+                        embedding=r.get("embedding"),
+                    )
+                    self.rules[rule.rule_id] = rule
+                return
 
-        # Extract rules dynamically using LLM
-        self._extract_and_embed_rules()
+            self._extract_and_embed_rules()
 
     def _segment_slack_transcript(self, text: str) -> List[Dict[str, str]]:
-        """
-        Segments raw Slack channel exports into atomic conversational thread blocks.
-        Splits by topic turns initiated by the onboarding team to ensure granular,
-        scalable rule extraction without context-window overflow.
-        """
         import re
         pattern = re.compile(r"(?=\*\*Alex\*\* —)", re.MULTILINE)
         raw_chunks = pattern.split(text)
@@ -97,19 +98,14 @@ class KnowledgeEngine:
             segments.append({
                 "thread_id": "THREAD-FULL",
                 "header": "Full Thread",
-                "content": text.strip()
+                "content": text.strip(),
             })
         return segments
 
     def _extract_and_embed_rules(self):
-        """
-        Extracts operational rules using a thread-segmented windowing architecture.
-        Each thread is processed independently for scalable extraction, atomic provenance,
-        and vector deduplication against SQLite.
-        """
-        logger.info("Extracting operational rules from %s via scalable thread windowing...", self.slack_path)
+        logger.info("Extracting operational rules from %s...", self.slack_path)
         if not self.slack_path.exists():
-            logger.warning("Slack thread not found at %s. Initializing empty knowledge engine.", self.slack_path)
+            logger.warning("Slack thread not found at %s.", self.slack_path)
             return
 
         slack_text = self.slack_path.read_text(encoding="utf-8")
@@ -117,8 +113,6 @@ class KnowledgeEngine:
         system_prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else ""
 
         segments = self._segment_slack_transcript(slack_text)
-        logger.info("Segmented Slack channel into %d conversational threads for incremental ingestion.", len(segments))
-
         for seg in segments:
             thread_prompt = (
                 f"Conversational Thread: {seg['thread_id']} ({seg['header']})\n\n"
@@ -126,30 +120,27 @@ class KnowledgeEngine:
                 f"Extract all operational business rules decided or confirmed in this specific thread."
             )
             try:
-                data = llm_client.generate_json(system_prompt=system_prompt, user_prompt=thread_prompt)
-                extracted = data.get("rules", [])
+                with telemetry.trace_tool("extract_rules_from_thread", thread_id=seg["thread_id"]):
+                    data = llm_client.generate_json(system_prompt=system_prompt, user_prompt=thread_prompt)
+                    extracted = data.get("rules", [])
 
                 for item in extracted:
                     rule_id = item.get("rule_id")
                     desc = item.get("description", "")
 
-                    # Generate embedding with Google text-embedding-004
                     embedding = None
                     try:
-                        vecs = llm_client.embed_text(desc)
-                        if vecs:
-                            embedding = vecs[0]
-                    except Exception as e:
-                        logger.warning("Could not generate embedding for rule %s: %s", rule_id, e)
+                        with telemetry.trace_tool("embed_rule_text", rule_id=rule_id):
+                            vecs = llm_client.embed_text(desc)
+                            if vecs:
+                                embedding = vecs[0]
+                    except Exception as exc:
+                        logger.debug("Embedding skipped for rule %s: %s", rule_id, exc)
 
-                    # Deduplication via vector similarity against SQLite knowledge store
                     if embedding:
                         similar = knowledge_db.find_similar_rules(embedding, top_k=1)
                         if similar and similar[0].get("similarity", 0) >= 0.90:
-                            existing_id = similar[0]["rule_id"]
-                            logger.info("Rule '%s' matches existing rule '%s' (sim: %.2f) - updating metadata.",
-                                        rule_id, existing_id, similar[0]["similarity"])
-                            rule_id = existing_id
+                            rule_id = similar[0]["rule_id"]
 
                     rule = KnowledgeRule(
                         rule_id=rule_id,
@@ -163,7 +154,6 @@ class KnowledgeEngine:
                     )
                     self.rules[rule.rule_id] = rule
 
-                    # Persist to SQLite
                     knowledge_db.save_rule(
                         rule_id=rule.rule_id,
                         category=rule.category,
@@ -197,45 +187,48 @@ class KnowledgeEngine:
         return self.rules.get(rule_id)
 
     def find_rules_by_topic(self, topic: str, top_k: int = 2) -> List[KnowledgeRule]:
-        """Performs semantic vector search against encoded business rules."""
-        try:
-            vecs = llm_client.embed_text(topic)
-            if vecs:
-                similar = knowledge_db.find_similar_rules(vecs[0], top_k=top_k)
-                return [self.rules[r["rule_id"]] for r in similar if r["rule_id"] in self.rules]
-        except Exception as e:
-            logger.debug("Semantic rule search fallback: %s", e)
+        with telemetry.trace_tool("find_rules_by_topic", topic=topic):
+            try:
+                vecs = llm_client.embed_text(topic)
+                if vecs:
+                    similar = knowledge_db.find_similar_rules(vecs[0], top_k=top_k)
+                    return [self.rules[r["rule_id"]] for r in similar if r["rule_id"] in self.rules]
+            except Exception as e:
+                logger.debug("Semantic rule search fallback: %s", e)
 
-        # Fallback to category keyword matching
-        matches = []
-        for r in self.rules.values():
-            if any(term in r.description.lower() or term in r.category.lower() for term in topic.lower().split()):
-                matches.append(r)
-        return matches[:top_k]
+            matches = []
+            for r in self.rules.values():
+                if any(term in r.description.lower() or term in r.category.lower() for term in topic.lower().split()):
+                    matches.append(r)
+            return matches[:top_k]
 
     def map_client_status(self, raw_status: str) -> Tuple[str, List[str], Optional[KnowledgeRule]]:
-        """
-        Applies status normalization rules.
-        e.g. 'Legacy' -> ('ACTIVE', ['acquired from Harborline'], rule)
-             'Prospect' -> ('PROSPECT', [], None)
-             'Active' -> ('ACTIVE', [], None)
-        """
         clean = raw_status.strip().title() if raw_status else "ACTIVE"
+        clean_lower = clean.lower()
 
-        if clean.lower() == "legacy":
+        # Check dynamic declarative rules
+        for r in self.rules.values():
+            trigger = r.metadata.get("source_status", "").lower()
+            if trigger and trigger == clean_lower:
+                target_status = r.metadata.get("target_status", "ACTIVE")
+                tag = r.metadata.get("tag") or r.metadata.get("note")
+                tags = [tag] if tag else []
+                return target_status, tags, r
+
+        if clean_lower == "legacy":
             rule = next((r for r in self.rules.values() if "harborline" in r.rule_id.lower() or "legacy" in r.rule_id.lower()), None)
-            return "ACTIVE", ["acquired from Harborline"], rule
-        elif clean.lower() in ("prospect", "lead"):
+            tags = ["acquired from Harborline"] if rule else []
+            return "ACTIVE", tags, rule
+        elif clean_lower in ("prospect", "lead"):
             return "PROSPECT", [], None
-        elif clean.lower() in ("former", "churned", "inactive"):
+        elif clean_lower in ("former", "churned", "inactive"):
             return "INACTIVE", [], None
-        elif clean.lower() in ("active", "client"):
+        elif clean_lower in ("active", "client"):
             return "ACTIVE", [], None
         else:
             return "ACTIVE", [f"raw_status:{clean}"], None
 
     def is_departed_staff(self, name: str) -> bool:
-        """Checks if name matches any departed staff member identified in declarative rules."""
         if not name:
             return False
         name_lower = name.lower().strip()
@@ -247,10 +240,6 @@ class KnowledgeEngine:
         return False
 
     def find_deduplication_rule(self, entity_name: str) -> Optional[KnowledgeRule]:
-        """
-        Dynamically finds any declarative deduplication rule matching the given entity name
-        using rule metadata (entity_name, duplicate_variants) extracted from institutional lore.
-        """
         if not entity_name:
             return None
         clean = entity_name.lower().replace(",", " ").strip()
@@ -266,17 +255,13 @@ class KnowledgeEngine:
                     return r
         return None
 
-    def is_known_duplicate_petrov(self, name: str) -> bool:
-        """Compatibility method delegating to dynamic find_deduplication_rule."""
-        return self.find_deduplication_rule(name) is not None
-
     def convert_currency_to_usd(self, currency: str, amount: float) -> Tuple[float, float, str]:
-        """
-        Converts amount from source currency to USD using benchmark quarter-end FX rates.
-        Returns: (usd_amount, fx_rate, reasoning)
-        """
         curr = currency.upper().strip() if currency else "USD"
         rate = config.fx_rates_to_usd.get(curr, 1.0)
         usd_val = round(amount * rate, 2)
         reasoning = f"Converted {amount:,.2f} {curr} to USD @ {rate:.4f} (Q2 2025 benchmark rate)"
         return usd_val, rate, reasoning
+
+
+# Backward compatibility alias
+KnowledgeEngine = KnowledgeMiningAgent

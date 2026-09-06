@@ -1,218 +1,205 @@
 """
-Document & Context Mining Agent.
-Reads Notion client dossiers and meeting notes to extract latent relationship facts
-(spouses, parent households, corporate signer roles, custodian currency hints,
-and operational flags) using Google Gemini and exact source citations.
+Dossier & Document Mining Agent.
+Extracts latent relationship facts from Notion client and meeting notes
+(spousal ties, corporate signer roles, currency hints, and churn indicators)
+using Google GenAI models with field-level citations and telemetry tracking.
 """
 
 import logging
 from typing import Dict, List, Any, Optional
+
+from google.adk.agents import BaseAgent
 from config import config
 from pipeline.llm_client import llm_client
+from pipeline.telemetry import telemetry
 
 logger = logging.getLogger(__name__)
 
 
-class DocMinerAgent:
-    def __init__(self):
+class DossierMinerAgent(BaseAgent):
+    """Google ADK agent for mining unstructured CRM dossiers and meeting markdown notes."""
+
+    name: str = "DossierMinerAgent"
+    description: str = "Mines unstructured client dossiers and meeting notes for latent facts and relationships."
+
+    def __init__(self, **data):
+        super().__init__(**data)
         prompt_path = config.prompts_dir / "doc_mining.txt"
-        self.system_prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else ""
+        system_prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else ""
+        object.__setattr__(self, "system_prompt", system_prompt)
 
     def mine_client_notes(self, clients: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-        """
-        Mines all client Markdown page bodies using Google Gemini for unstructured reasoning.
-        Returns a mapping: client_name -> extracted insights dict.
-        """
-        extracted_by_client: Dict[str, Dict[str, Any]] = {}
-        notes_to_mine: List[Dict[str, str]] = []
+        """Mines client notes for relationships, roles, and entities."""
+        with telemetry.trace_agent(self.name, task="mine_client_notes"):
+            extracted: Dict[str, Dict[str, Any]] = {}
+            notes_to_mine: List[Dict[str, str]] = []
 
-        # Prepare default empty insight structure for all clients
-        for c in clients:
-            name = c.get("Name", "").strip()
-            body = c.get("_page_body", "").strip()
-            file_path = c.get("_page_file", "")
+            for c in clients:
+                name = c.get("Name", "").strip()
+                body = c.get("_page_body", "").strip()
+                file_path = c.get("_page_file", "")
 
-            insights = {
-                "spouse_of": None,
-                "role": "PRIMARY",
-                "household_hint": None,
-                "holds_joint_account": False,
-                "foreign_currency_hint": None,
-                "acquisition_notes": None,
-                "advisor_notes": None,
-                "affiliated_entities": [],
-                "ops_flag": None,
-                "raw_snippets": [],
-                "source_file": file_path,
-            }
-            extracted_by_client[name] = insights
+                insights = {
+                    "spouse_of": None,
+                    "role": "PRIMARY",
+                    "household_hint": None,
+                    "holds_joint_account": False,
+                    "foreign_currency_hint": None,
+                    "acquisition_notes": None,
+                    "advisor_notes": None,
+                    "affiliated_entities": [],
+                    "ops_flag": None,
+                    "raw_snippets": [],
+                    "source_file": file_path,
+                }
+                extracted[name] = insights
+                if body:
+                    notes_to_mine.append({"name": name, "body": body, "file": file_path})
 
-            if body:
-                notes_to_mine.append({
-                    "name": name,
-                    "body": body,
-                    "file": file_path,
-                })
+            if not notes_to_mine or not llm_client.is_available:
+                return extracted
 
-        if not notes_to_mine or not llm_client.is_available:
-            if notes_to_mine and not llm_client.is_available:
-                logger.info("LLM unavailable — returning default insights for %d clients.", len(notes_to_mine))
-            return extracted_by_client
+            batch_size = 15
+            for i in range(0, len(notes_to_mine), batch_size):
+                chunk = notes_to_mine[i : i + batch_size]
+                batch_prompt = (
+                    "Analyze the following client CRM dossier notes. For each client, extract:\n"
+                    "- spouse_of: Full name of spouse if indicated\n"
+                    "- role: Canonical role if implied ('PRIMARY', 'SPOUSE', 'SIGNER', 'TRUSTEE', 'DEPENDENT')\n"
+                    "- household_hint: Likely household name if specified\n"
+                    "- holds_joint_account: boolean\n"
+                    "- foreign_currency_hint: Currency code if foreign holdings mentioned\n"
+                    "- acquisition_notes: Mentions of acquisition or prior firm lineage\n"
+                    "- advisor_notes: Notes on advisor assignment\n"
+                    "- affiliated_entities: List of legal entities or LLCs\n"
+                    "- ops_flag: Any operational warning\n"
+                    "- raw_snippets: List of exact quoted sentences supporting extractions\n\n"
+                    "Input Client Notes:\n"
+                )
+                for item in chunk:
+                    batch_prompt += f"\n--- Client: {item['name']} (File: {item['file']}) ---\n{item['body']}\n"
+                batch_prompt += "\nOutput a JSON object with key 'clients' mapping client names to their extracted insight dictionary."
 
-        # Process client notes in manageable batches (15 per batch) to prevent gateway timeouts
-        batch_size = 15
-        for i in range(0, len(notes_to_mine), batch_size):
-            chunk = notes_to_mine[i : i + batch_size]
+                try:
+                    with telemetry.trace_tool("llm_mine_client_batch", batch_index=(i // batch_size) + 1):
+                        resp = llm_client.generate_json(self.system_prompt, batch_prompt)
+                    results = resp.get("clients", {})
+
+                    for name, data in results.items():
+                        target = next((k for k in extracted if k.lower() == name.lower()), None)
+                        if not target:
+                            target = next((k for k in extracted if name.lower() in k.lower() or k.lower() in name.lower()), None)
+
+                        def _clean_val(val: Any) -> Any:
+                            if isinstance(val, dict):
+                                return val.get("value", "")
+                            if isinstance(val, list):
+                                return [_clean_val(x) for x in val]
+                            return val
+
+                        if target:
+                            base = extracted[target]
+                            if data.get("spouse_of"):
+                                base["spouse_of"] = _clean_val(data["spouse_of"])
+                            if data.get("role"):
+                                base["role"] = str(_clean_val(data["role"])).upper()
+                            if data.get("household_hint"):
+                                base["household_hint"] = _clean_val(data["household_hint"])
+                            if data.get("holds_joint_account") is not None:
+                                base["holds_joint_account"] = bool(_clean_val(data["holds_joint_account"]))
+                            if data.get("foreign_currency_hint"):
+                                base["foreign_currency_hint"] = _clean_val(data["foreign_currency_hint"])
+                            if data.get("acquisition_notes"):
+                                base["acquisition_notes"] = _clean_val(data["acquisition_notes"])
+                            if data.get("advisor_notes"):
+                                base["advisor_notes"] = _clean_val(data["advisor_notes"])
+                            if data.get("affiliated_entities"):
+                                ents = _clean_val(data["affiliated_entities"])
+                                base["affiliated_entities"] = [e for e in ents if e] if isinstance(ents, list) else [ents]
+                            if data.get("ops_flag"):
+                                base["ops_flag"] = _clean_val(data["ops_flag"])
+                            if data.get("raw_snippets"):
+                                snips = _clean_val(data["raw_snippets"])
+                                base["raw_snippets"] = [s for s in snips if s] if isinstance(snips, list) else [snips]
+                except Exception as exc:
+                    logger.warning("Client note batch %d mining failed: %s", (i // batch_size) + 1, exc)
+
+            return extracted
+
+    def mine_meeting_notes(self, meetings: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+        """Mines meeting notes for client aliases, prospect leads, and discussion topics."""
+        with telemetry.trace_agent(self.name, task="mine_meeting_notes"):
+            extracted: Dict[str, Dict[str, Any]] = {}
+            meetings_to_mine: List[Dict[str, str]] = []
+
+            for m in meetings:
+                name = m.get("Name", "").strip()
+                body = m.get("_page_body", "").strip()
+                client_field = m.get("Client", "").strip()
+
+                insights = {
+                    "client_alias": None,
+                    "is_unentered_lead": False,
+                    "is_churn_discussion": False,
+                    "entity_notes": None,
+                    "summary": body if body else None,
+                    "raw_snippets": [],
+                }
+                extracted[name] = insights
+                if body:
+                    meetings_to_mine.append({"name": name, "client_field": client_field, "body": body})
+
+            if not meetings_to_mine or not llm_client.is_available:
+                return extracted
+
             batch_prompt = (
-                "Analyze the following client CRM dossier notes. For each client, extract:\n"
-                "- spouse_of: Full name of spouse if indicated (e.g. 'Robert Chen', 'Sarah Thompson')\n"
-                "- role: Canonical role if implied ('PRIMARY', 'SPOUSE', 'SIGNER', 'TRUSTEE', 'DEPENDENT')\n"
-                "- household_hint: Likely household name if specified\n"
-                "- holds_joint_account: boolean (true if notes mention holding a joint account)\n"
-                "- foreign_currency_hint: Currency code if foreign holdings mentioned ('EUR', 'CHF')\n"
-                "- acquisition_notes: Mentions of Harborline or legacy acquisition\n"
-                "- advisor_notes: Notes indicating unassigned advisor of record\n"
-                "- affiliated_entities: List of legal entities or LLCs (e.g. ['Nakamura Holdings LLC'])\n"
-                "- ops_flag: Any operational warning or note flagged for ops\n"
-                "- raw_snippets: List of exact quoted sentences/clauses supporting the extractions\n\n"
-                "Input Client Notes:\n"
+                "Analyze the following meeting notes. For each meeting, extract:\n"
+                "- client_alias: Canonical client name if meeting uses an alias/nickname\n"
+                "- is_unentered_lead: boolean\n"
+                "- is_churn_discussion: boolean\n"
+                "- entity_notes: Notes on legal entity structuring\n"
+                "- raw_snippets: List of exact quoted sentences supporting extractions\n\n"
+                "Input Meetings:\n"
             )
-            for item in chunk:
-                batch_prompt += f"\n--- Client: {item['name']} (File: {item['file']}) ---\n{item['body']}\n"
-
-            batch_prompt += (
-                "\nOutput a JSON object with key 'clients' mapping client names to their extracted insight dictionary."
-            )
+            for item in meetings_to_mine:
+                batch_prompt += f"\n--- Meeting: {item['name']} (Client: {item['client_field']}) ---\n{item['body']}\n"
+            batch_prompt += "\nOutput a JSON object with key 'meetings' mapping meeting names to their extracted insights."
 
             try:
-                logger.info("Calling Gemini to mine client dossier batch %d/%d...", (i // batch_size) + 1, (len(notes_to_mine) + batch_size - 1) // batch_size)
-                resp = llm_client.generate_json(self.system_prompt, batch_prompt)
-                llm_results = resp.get("clients", {})
+                with telemetry.trace_tool("llm_mine_meeting_notes", count=len(meetings_to_mine)):
+                    resp = llm_client.generate_json(self.system_prompt, batch_prompt)
+                results = resp.get("meetings", {})
 
-                for name, insights_data in llm_results.items():
-                    target_key = next((k for k in extracted_by_client if k.lower() == name.lower()), None)
-                    if not target_key:
-                        target_key = next((k for k in extracted_by_client if name.lower() in k.lower() or k.lower() in name.lower()), None)
+                for name, data in results.items():
+                    target = next((k for k in extracted if k.lower() == name.lower()), None)
+                    if not target:
+                        target = next((k for k in extracted if name.lower() in k.lower() or k.lower() in name.lower()), None)
 
                     def _clean_val(val: Any) -> Any:
                         if isinstance(val, dict):
-                            return val.get("value", "")
+                            return val.get("value") or val.get("snippet", "")
                         if isinstance(val, list):
-                            return [_clean_val(item) for item in val]
+                            return [_clean_val(x) for x in val]
                         return val
 
-                    if target_key:
-                        base = extracted_by_client[target_key]
-                        if insights_data.get("spouse_of"):
-                            base["spouse_of"] = _clean_val(insights_data["spouse_of"])
-                        if insights_data.get("role"):
-                            base["role"] = str(_clean_val(insights_data["role"])).upper()
-                        if insights_data.get("household_hint"):
-                            base["household_hint"] = _clean_val(insights_data["household_hint"])
-                        if insights_data.get("holds_joint_account") is not None:
-                            base["holds_joint_account"] = bool(_clean_val(insights_data["holds_joint_account"]))
-                        if insights_data.get("foreign_currency_hint"):
-                            base["foreign_currency_hint"] = _clean_val(insights_data["foreign_currency_hint"])
-                        if insights_data.get("acquisition_notes"):
-                            base["acquisition_notes"] = _clean_val(insights_data["acquisition_notes"])
-                        if insights_data.get("advisor_notes"):
-                            base["advisor_notes"] = _clean_val(insights_data["advisor_notes"])
-                        if insights_data.get("affiliated_entities"):
-                            entities = _clean_val(insights_data["affiliated_entities"])
-                            base["affiliated_entities"] = [e for e in entities if e] if isinstance(entities, list) else [entities]
-                        if insights_data.get("ops_flag"):
-                            base["ops_flag"] = _clean_val(insights_data["ops_flag"])
-                        if insights_data.get("raw_snippets"):
-                            snippets = _clean_val(insights_data["raw_snippets"])
-                            base["raw_snippets"] = [s for s in snippets if s] if isinstance(snippets, list) else [snippets]
+                    if target:
+                        base = extracted[target]
+                        if data.get("client_alias"):
+                            base["client_alias"] = _clean_val(data["client_alias"])
+                        if data.get("is_unentered_lead") is not None:
+                            base["is_unentered_lead"] = bool(_clean_val(data["is_unentered_lead"]))
+                        if data.get("is_churn_discussion") is not None:
+                            base["is_churn_discussion"] = bool(_clean_val(data["is_churn_discussion"]))
+                        if data.get("entity_notes"):
+                            base["entity_notes"] = _clean_val(data["entity_notes"])
+                        if data.get("raw_snippets"):
+                            snips = _clean_val(data["raw_snippets"])
+                            base["raw_snippets"] = [s for s in snips if s] if isinstance(snips, list) else [snips]
+            except Exception as exc:
+                logger.warning("Meeting notes mining failed gracefully: %s. Using default summaries.", exc)
 
-            except Exception as e:
-                logger.warning("Batch LLM client note mining failed for chunk %d: %s", (i // batch_size) + 1, e)
+            return extracted
 
-        return extracted_by_client
 
-    def mine_meeting_notes(self, meetings: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-        """
-        Mines all meeting Markdown bodies using Google Gemini.
-        Returns a mapping: meeting_name -> extracted insights dict.
-        """
-        extracted_by_meeting: Dict[str, Dict[str, Any]] = {}
-        meetings_to_mine: List[Dict[str, str]] = []
-
-        for m in meetings:
-            name = m.get("Name", "").strip()
-            body = m.get("_page_body", "").strip()
-            client_field = m.get("Client", "").strip()
-
-            insights = {
-                "client_alias": None,
-                "is_unentered_lead": False,
-                "is_churn_discussion": False,
-                "entity_notes": None,
-                "summary": body if body else None,
-                "raw_snippets": [],
-            }
-            extracted_by_meeting[name] = insights
-
-            if body:
-                meetings_to_mine.append({
-                    "name": name,
-                    "client_field": client_field,
-                    "body": body,
-                })
-
-        if not meetings_to_mine or not llm_client.is_available:
-            if meetings_to_mine and not llm_client.is_available:
-                logger.info("LLM unavailable — returning default meeting insights for %d meetings.", len(meetings_to_mine))
-            return extracted_by_meeting
-
-        batch_prompt = (
-            "Analyze the following meeting notes from an RIA CRM. For each meeting, extract:\n"
-            "- client_alias: Canonical client name if the meeting uses a diminutive/nickname (e.g. 'Bob Chen' -> 'Robert Chen')\n"
-            "- is_unentered_lead: boolean (true if meeting is with a prospective client not yet in CRM)\n"
-            "- is_churn_discussion: boolean (true if discussion involves winding down or churn)\n"
-            "- entity_notes: Notes on legal entity structuring (e.g. family IRA under LLC)\n"
-            "- raw_snippets: List of exact quoted sentences supporting the extractions\n\n"
-            "Input Meetings:\n"
-        )
-        for item in meetings_to_mine:
-            batch_prompt += f"\n--- Meeting: {item['name']} (Client Field: {item['client_field']}) ---\n{item['body']}\n"
-
-        batch_prompt += "\nOutput a JSON object with key 'meetings' mapping meeting names to their extracted insights."
-
-        try:
-            logger.info("Calling Gemini to mine %d meeting notes...", len(meetings_to_mine))
-            resp = llm_client.generate_json(self.system_prompt, batch_prompt)
-            llm_results = resp.get("meetings", {})
-
-            for name, insights_data in llm_results.items():
-                target_key = next((k for k in extracted_by_meeting if k.lower() == name.lower()), None)
-                if not target_key:
-                    target_key = next((k for k in extracted_by_meeting if name.lower() in k.lower() or k.lower() in name.lower()), None)
-
-                def _clean_val(val: Any) -> Any:
-                    if isinstance(val, dict):
-                        return val.get("value") or val.get("snippet", "")
-                    if isinstance(val, list):
-                        return [_clean_val(item) for item in val]
-                    return val
-
-                if target_key:
-                    base = extracted_by_meeting[target_key]
-                    if insights_data.get("client_alias"):
-                        base["client_alias"] = _clean_val(insights_data["client_alias"])
-                    if insights_data.get("is_unentered_lead") is not None:
-                        base["is_unentered_lead"] = bool(_clean_val(insights_data["is_unentered_lead"]))
-                    if insights_data.get("is_churn_discussion") is not None:
-                        base["is_churn_discussion"] = bool(_clean_val(insights_data["is_churn_discussion"]))
-                    if insights_data.get("entity_notes"):
-                        base["entity_notes"] = _clean_val(insights_data["entity_notes"])
-                    if insights_data.get("raw_snippets"):
-                        snippets = _clean_val(insights_data["raw_snippets"])
-                        base["raw_snippets"] = [s for s in snippets if s] if isinstance(snippets, list) else [snippets]
-
-        except Exception as e:
-            logger.error("LLM meeting note mining failed: %s", e)
-            raise
-
-        return extracted_by_meeting
+# Backward compatibility alias
+DocMinerAgent = DossierMinerAgent
