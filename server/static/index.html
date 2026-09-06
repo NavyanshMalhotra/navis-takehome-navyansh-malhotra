@@ -34,13 +34,13 @@
     <section class="metric-summary-strip">
       <div class="metric-cell highlight">
         <div class="metric-label">Active Billing AUM</div>
-        <div class="metric-value" id="kpiActiveAum">$66,403,225</div>
+        <div class="metric-value" id="kpiActiveAum">$67,283,225</div>
         <div class="metric-note">Excludes inactive households (Rule 8)</div>
       </div>
 
       <div class="metric-cell">
         <div class="metric-label">Custodian Market Value</div>
-        <div class="metric-value" id="kpiTotalMv">$66,415,625</div>
+        <div class="metric-value" id="kpiTotalMv">$67,295,625</div>
         <div class="metric-note">Delta: <span class="metric-delta">-$12,400</span> (Thompson churn)</div>
       </div>
 
@@ -52,7 +52,7 @@
 
       <div class="metric-cell">
         <div class="metric-label">Accounts</div>
-        <div class="metric-value" id="kpiAccounts">50</div>
+        <div class="metric-value" id="kpiAccounts">51</div>
         <div class="metric-note">2 orphans in triage (Rule 4)</div>
       </div>
 
@@ -64,7 +64,7 @@
 
       <div class="metric-cell highlight">
         <div class="metric-label">Clarifications Queue</div>
-        <div class="metric-value" id="kpiClarif">8</div>
+        <div class="metric-value" id="kpiClarif">7</div>
         <div class="metric-note">Customer-ready for Dana Ruiz</div>
       </div>
     </section>
@@ -73,7 +73,7 @@
     <nav class="view-tabs">
       <button class="view-tab active" onclick="switchTab('canonical')">Canonical Store</button>
       <button class="view-tab" onclick="switchTab('triage')">
-        Clarifications Queue <span class="tab-badge" id="triageBadge">8</span>
+        Clarifications Queue <span class="tab-badge" id="triageBadge">7</span>
       </button>
       <button class="view-tab" onclick="switchTab('audit')">Rules & Invariants (8/8)</button>
       <button class="view-tab" onclick="switchTab('slack')">Slack Message Export</button>
@@ -85,7 +85,7 @@
         <div class="entity-subnav">
           <button class="entity-btn active" onclick="filterEntityType('households')">Households (<span id="countHh">52</span>)</button>
           <button class="entity-btn" onclick="filterEntityType('clients')">Clients (<span id="countCli">56</span>)</button>
-          <button class="entity-btn" onclick="filterEntityType('accounts')">Accounts (<span id="countAcc">50</span>)</button>
+          <button class="entity-btn" onclick="filterEntityType('accounts')">Accounts (<span id="countAcc">51</span>)</button>
           <button class="entity-btn" onclick="filterEntityType('advisors')">Advisors (<span id="countAdv">7</span>)</button>
           <button class="entity-btn" onclick="filterEntityType('interactions')">Interactions (<span id="countInt">17</span>)</button>
         </div>
