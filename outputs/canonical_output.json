@@ -2712,7 +2712,7 @@
           "method": "LLM_DOC_MINING",
           "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Bill Thompson' from Notion page body"
+          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
       }
     },
@@ -2985,7 +2985,7 @@
       "household_id": "HH-ABRAMSON",
       "first_name": "Rachel",
       "last_name": "Abramson",
-      "role": "SPOUSE",
+      "role": "PRIMARY",
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.00%",
@@ -3006,10 +3006,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Rachel Abramson 9b089ad6bf202bf936f3c33e84cce4ef.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Rachel Abramson",
-          "method": "LLM_DOC_MINING",
-          "confidence": 0.98,
+          "method": "DEFAULT_PRIMARY",
+          "confidence": 0.9,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Daniel Abramson' from Notion page body"
+          "reasoning": "Primary contact for household"
         }
       }
     },
@@ -3042,7 +3042,7 @@
           "method": "LLM_DOC_MINING",
           "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
+          "reasoning": "Identified as spouse/wife of 'Rachel Abramson' from Notion page body"
         }
       }
     },
@@ -3207,7 +3207,7 @@
           "method": "LLM_DOC_MINING",
           "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
+          "reasoning": "Identified as spouse/wife of 'Megan Sullivan' from Notion page body"
         }
       }
     },
@@ -6866,10 +6866,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 19",
           "source_raw_value": "Petrov, Dmitri",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Petrov, Dmitri' -> 'Dmitri Petrov' -> Household HH-PETROV"
+          "reasoning": "Direct link to household HH-PETROV"
         }
       }
     }
