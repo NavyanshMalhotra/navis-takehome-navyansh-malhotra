@@ -59,6 +59,13 @@ class PipelineConfig:
         "CAD": 0.7310,
     })
 
+    # Target Firm Dynamic Resolution
+    firm_name: str = os.getenv("FIRM_NAME", "Beaconcrest Advisors")
+
+    # Telemetry and Tracing
+    enable_telemetry: bool = True
+    trace_service_name: str = "nevis-adk-pipeline"
+
     # Canonical Enum Values (Strictly matching Nevis Canonical Schema)
     HOUSEHOLD_STATUSES: tuple = ("ACTIVE", "INACTIVE", "PROSPECT")
     CLIENT_ROLES: tuple = ("PRIMARY", "SPOUSE", "DEPENDENT", "SIGNER", "OTHER")
