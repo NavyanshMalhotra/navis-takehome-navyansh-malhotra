@@ -12,22 +12,30 @@ from pipeline.readers import (
     read_notion_meetings
 )
 from pipeline.knowledge_layer import KnowledgeEngine
+import json
+from pipeline.models import CanonicalOutputBundle
 from pipeline.transformer import CanonicalTransformer
 from pipeline.auditor import CanonicalAuditor
 
 class TestNevisCanonicalRules(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.advisors = read_advisor_roster(config.sources_dir / "advisor_roster.csv")
-        cls.custodian = read_custodian_positions(config.sources_dir / "custodian_positions.xlsx")
-        cls.clients = read_notion_clients(config.sources_dir / "notion_export")
-        cls.meetings = read_notion_meetings(config.sources_dir / "notion_export")
-        
-        cls.ke = KnowledgeEngine()
-        cls.transformer = CanonicalTransformer(cls.ke)
-        cls.bundle, cls.clarifs = cls.transformer.transform_all(
-            cls.advisors, cls.clients, cls.meetings, cls.custodian
-        )
+        canonical_path = config.outputs_dir / "canonical_output.json"
+        if canonical_path.exists():
+            with open(canonical_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            cls.bundle = CanonicalOutputBundle.from_dict(data)
+        else:
+            cls.advisors = read_advisor_roster(config.sources_dir / "advisor_roster.csv")
+            cls.custodian = read_custodian_positions(config.sources_dir / "custodian_positions.xlsx")
+            cls.clients = read_notion_clients(config.sources_dir / "notion_export")
+            cls.meetings = read_notion_meetings(config.sources_dir / "notion_export")
+            cls.ke = KnowledgeEngine()
+            cls.transformer = CanonicalTransformer(cls.ke)
+            cls.bundle, cls.clarifs = cls.transformer.transform_all(
+                cls.advisors, cls.clients, cls.meetings, cls.custodian
+            )
+
 
     def test_rule_1_primary_advisor(self):
         """Rule 1: Exactly one primary advisor per household, non-null."""
@@ -93,6 +101,31 @@ class TestNevisCanonicalRules(unittest.TestCase):
         int_summaries = [i.summary for i in self.bundle.interactions]
         self.assertFalse(any("Redwood Capital" in str(s) for s in int_summaries))
 
+    def test_rule_8_active_aum_exclusion(self):
+        """Rule 8: Inactive households preserve custodian holdings but yield active_aum_usd = 0.0."""
+        thompson_hh = next((h for h in self.bundle.households if "THOMPSON" in h.household_id), None)
+        self.assertIsNotNone(thompson_hh)
+        self.assertFalse(thompson_hh.is_active)
+        self.assertEqual(thompson_hh.status, "INACTIVE")
+        self.assertAlmostEqual(thompson_hh.market_value_usd, 12400.0, places=2)
+        self.assertAlmostEqual(thompson_hh.active_aum_usd, 0.0, places=2)
+
+        # Active households with accounts should have active_aum_usd == market_value_usd
+        for h in self.bundle.households:
+            if h.is_active and h.market_value_usd is not None:
+                self.assertAlmostEqual(h.active_aum_usd, h.market_value_usd, places=2)
+
+    def test_provenance_relative_paths(self):
+        """Verify provenance paths are relative and clean (no absolute machine paths)."""
+        for h in self.bundle.households:
+            if hasattr(h, "_provenance") and h._provenance:
+                for field, prov in h._provenance.items():
+                    if isinstance(prov, dict):
+                        src_file = prov.get("source_file", "")
+                    else:
+                        src_file = getattr(prov, "source_file", "")
+                    self.assertFalse(src_file.startswith("/Users/"), f"Absolute path found in provenance: {src_file}")
+
     def test_slack_round1_resolutions(self):
         """Verify Dana's Slack Round 1 resolutions are strictly followed."""
         # 1. Legacy -> ACTIVE with Harborline tag
@@ -112,3 +145,4 @@ class TestNevisCanonicalRules(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

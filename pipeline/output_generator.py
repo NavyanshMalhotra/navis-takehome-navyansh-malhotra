@@ -36,7 +36,13 @@ class ClarificationAgent:
         """
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Also persist structured clarifications.json for fast server reloads
+        clarifs_json_path = output_path.parent / "clarifications.json"
+        with open(clarifs_json_path, "w", encoding="utf-8") as f:
+            json.dump([c.to_dict() for c in clarifs], f, indent=2, ensure_ascii=False)
+
         prompt_path = config.prompts_dir / "clarification_drafting.txt"
+
         system_prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else ""
 
         # Format structured input items

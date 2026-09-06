@@ -130,3 +130,60 @@ class CanonicalOutputBundle:
             "advisors": [adv.to_dict() for adv in self.advisors],
             "interactions": [i.to_dict() for i in self.interactions],
         }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "CanonicalOutputBundle":
+        households = []
+        for h in d.get("households", []):
+            prov = {}
+            for k, p in h.get("_provenance", {}).items():
+                prov[k] = FieldProvenance(**p) if isinstance(p, dict) else p
+            h_copy = dict(h)
+            h_copy["_provenance"] = prov
+            households.append(Household(**h_copy))
+
+        clients = []
+        for c in d.get("clients", []):
+            prov = {}
+            for k, p in c.get("_provenance", {}).items():
+                prov[k] = FieldProvenance(**p) if isinstance(p, dict) else p
+            c_copy = dict(c)
+            c_copy["_provenance"] = prov
+            clients.append(Client(**c_copy))
+
+        accounts = []
+        for a in d.get("accounts", []):
+            prov = {}
+            for k, p in a.get("_provenance", {}).items():
+                prov[k] = FieldProvenance(**p) if isinstance(p, dict) else p
+            a_copy = dict(a)
+            a_copy["_provenance"] = prov
+            accounts.append(Account(**a_copy))
+
+        advisors = []
+        for adv in d.get("advisors", []):
+            prov = {}
+            for k, p in adv.get("_provenance", {}).items():
+                prov[k] = FieldProvenance(**p) if isinstance(p, dict) else p
+            adv_copy = dict(adv)
+            adv_copy["_provenance"] = prov
+            advisors.append(Advisor(**adv_copy))
+
+        interactions = []
+        for i in d.get("interactions", []):
+            prov = {}
+            for k, p in i.get("_provenance", {}).items():
+                prov[k] = FieldProvenance(**p) if isinstance(p, dict) else p
+            i_copy = dict(i)
+            i_copy["_provenance"] = prov
+            interactions.append(Interaction(**i_copy))
+
+        return cls(
+            households=households,
+            clients=clients,
+            accounts=accounts,
+            advisors=advisors,
+            interactions=interactions,
+            metadata=d.get("metadata", {}),
+        )
+

@@ -1,0 +1,138 @@
+[
+  {
+    "id": "CLARIF-ADV-HH-DELGADO",
+    "category": "UNASSIGNED_ADVISOR",
+    "title": "Unassigned Primary Advisor for Household 'Delgado' (Maria Delgado)",
+    "trigger": "Advisor field is blank in Notion CRM for 'Maria Delgado'. Canonical Rule 1 requires exactly one non-null primary advisor.",
+    "evidence": "Notion Client row for 'Maria Delgado'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'doesn't really have a proper advisor of record assigned'.",
+    "candidate_options": [
+      "Assign to Priya Raman (San Francisco)",
+      "Assign to Marcus Webb (Chicago)",
+      "Assign to Elena Sokolova (Chicago)"
+    ],
+    "proposed_default": "Assign to Marcus Webb (Advisor, Chicago)",
+    "confidence": 0.4,
+    "status": "PENDING_REVIEW",
+    "entity_ref": "HH-DELGADO",
+    "resolved_value": null
+  },
+  {
+    "id": "CLARIF-ADV-HH-WHITFIELD",
+    "category": "UNASSIGNED_ADVISOR",
+    "title": "Unassigned Primary Advisor for Household 'Whitfield' (George Whitfield)",
+    "trigger": "Advisor field is blank in Notion CRM for 'George Whitfield'. Canonical Rule 1 requires exactly one non-null primary advisor.",
+    "evidence": "Notion Client row for 'George Whitfield'. Status='Legacy'. Service Rep='A. Novak'. Page note: 'Anna was looking after him before she left the firm — needs reassigning to someone current.'. WARNING: Service Rep 'A. Novak' is Anna Novak who departed the firm.",
+    "candidate_options": [
+      "Assign to Priya Raman (San Francisco)",
+      "Assign to Marcus Webb (Chicago)",
+      "Assign to Elena Sokolova (Chicago)"
+    ],
+    "proposed_default": "Assign to Priya Raman (Senior Advisor, San Francisco)",
+    "confidence": 0.4,
+    "status": "PENDING_REVIEW",
+    "entity_ref": "HH-WHITFIELD",
+    "resolved_value": null
+  },
+  {
+    "id": "CLARIF-ADV-HH-PETIT",
+    "category": "UNASSIGNED_ADVISOR",
+    "title": "Unassigned Primary Advisor for Household 'Petit' (Louis Petit)",
+    "trigger": "Advisor field is blank in Notion CRM for 'Louis Petit'. Canonical Rule 1 requires exactly one non-null primary advisor.",
+    "evidence": "Notion Client row for 'Louis Petit'. Status='Legacy'. Service Rep='Marcus Webb'. Page note: 'Never got a proper advisor of record assigned.'.",
+    "candidate_options": [
+      "Assign to Priya Raman (San Francisco)",
+      "Assign to Marcus Webb (Chicago)",
+      "Assign to Elena Sokolova (Chicago)"
+    ],
+    "proposed_default": "Assign to Marcus Webb (Advisor, Chicago)",
+    "confidence": 0.4,
+    "status": "PENDING_REVIEW",
+    "entity_ref": "HH-PETIT",
+    "resolved_value": null
+  },
+  {
+    "id": "CLARIF-ADV-HH-VANDERMEER",
+    "category": "UNASSIGNED_ADVISOR",
+    "title": "Unassigned Primary Advisor for Household 'Vandermeer' (Joris Vandermeer)",
+    "trigger": "Advisor field is blank in Notion CRM for 'Joris Vandermeer'. Canonical Rule 1 requires exactly one non-null primary advisor.",
+    "evidence": "Notion Client row for 'Joris Vandermeer'. Status='Active'. Service Rep=''. Page note: 'None'.",
+    "candidate_options": [
+      "Assign to Priya Raman (San Francisco)",
+      "Assign to Marcus Webb (Chicago)",
+      "Assign to Elena Sokolova (Chicago)"
+    ],
+    "proposed_default": "Assign to Priya Raman (Senior Advisor, San Francisco)",
+    "confidence": 0.4,
+    "status": "PENDING_REVIEW",
+    "entity_ref": "HH-VANDERMEER",
+    "resolved_value": null
+  },
+  {
+    "id": "CLARIF-ACC-CU-5010",
+    "category": "ORPHAN_ACCOUNT",
+    "title": "Unmapped Custodian Account — Carlos Vasquez (CU-5010)",
+    "trigger": "Account 'CU-5010' at Schwab ($980,000.00 USD) has holder 'Carlos Vasquez' with no matching client or household in Notion CRM.",
+    "evidence": "Custodian position record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 12. Custodian=Schwab, Type=Individual.",
+    "candidate_options": [
+      "Add 'Carlos Vasquez' as a new Household and Client in Nevis.",
+      "Link to an existing client under a different legal name/entity.",
+      "Account is closed, winding down, or belongs to another firm."
+    ],
+    "proposed_default": "Stage account under holding queue; request Dana confirm client identity or create Household 'Vasquez Household'.",
+    "confidence": 0.2,
+    "status": "PENDING_REVIEW",
+    "entity_ref": "CU-5010",
+    "resolved_value": null
+  },
+  {
+    "id": "CLARIF-ACC-CU-6023",
+    "category": "ORPHAN_ACCOUNT",
+    "title": "Unmapped Custodian Account — Bill Fitzgerald (CU-6023)",
+    "trigger": "Account 'CU-6023' at Schwab ($880,000.00 USD) has holder 'Bill Fitzgerald' with no matching client or household in Notion CRM.",
+    "evidence": "Custodian position record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 35. Custodian=Schwab, Type=Individual.",
+    "candidate_options": [
+      "Add 'Bill Fitzgerald' as a new Household and Client in Nevis.",
+      "Link to an existing client under a different legal name/entity.",
+      "Account is closed, winding down, or belongs to another firm."
+    ],
+    "proposed_default": "Stage account under holding queue; request Dana confirm client identity or create Household 'Fitzgerald Household'.",
+    "confidence": 0.2,
+    "status": "PENDING_REVIEW",
+    "entity_ref": "CU-6023",
+    "resolved_value": null
+  },
+  {
+    "id": "CLARIF-ACC-CU-6025",
+    "category": "ORPHAN_ACCOUNT",
+    "title": "Unmapped Custodian Account — Priyanka Mehta (CU-6025)",
+    "trigger": "Account 'CU-6025' at Schwab ($670,000.00 USD) has holder 'Priyanka Mehta' with no matching client or household in Notion CRM.",
+    "evidence": "Custodian position record in nevis-fde-hometask/sources/custodian_positions.xlsx:Row 37. Custodian=Schwab, Type=Individual.",
+    "candidate_options": [
+      "Add 'Priyanka Mehta' as a new Household and Client in Nevis.",
+      "Link to an existing client under a different legal name/entity.",
+      "Account is closed, winding down, or belongs to another firm."
+    ],
+    "proposed_default": "Stage account under holding queue; request Dana confirm client identity or create Household 'Mehta Household'.",
+    "confidence": 0.2,
+    "status": "PENDING_REVIEW",
+    "entity_ref": "CU-6025",
+    "resolved_value": null
+  },
+  {
+    "id": "CLARIF-INT-M-INTRO-CALL-REDWOOD-CAPITAL",
+    "category": "ORPHAN_INTERACTION",
+    "title": "Unmatched Interaction — 'Intro Call — Redwood Capital' (Redwood Capital)",
+    "trigger": "Meeting client 'Redwood Capital' cannot be resolved to any existing household in CRM. Canonical Rule 7 forbids minting new households from meetings.",
+    "evidence": "Meeting note: 'Referred lead — not in the CRM yet.'. Attendee='James Okafor'. Date='June 8, 2025'.",
+    "candidate_options": [
+      "Lead became an active client under an unlisted name.",
+      "Prospecting lead never converted; archive interaction in prospect lake.",
+      "Typo/alias for an existing household."
+    ],
+    "proposed_default": "Archive interaction to prospect review queue without minting household pending Dana's confirmation.",
+    "confidence": 0.3,
+    "status": "PENDING_REVIEW",
+    "entity_ref": "M-INTRO-CALL-REDWOOD-CAPITAL",
+    "resolved_value": null
+  }
+]

@@ -6,7 +6,9 @@ and Slack export.
 
 import os
 import json
+import logging
 from pathlib import Path
+
 from typing import Dict, Any, List, Optional
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
@@ -31,6 +33,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
+from pipeline.models import CanonicalOutputBundle, ClarificationItem
+
+logger = logging.getLogger(__name__)
+
 # In-Memory State
 class AppState:
     def __init__(self):
@@ -42,11 +48,28 @@ class AppState:
         self.last_run_time = None
         self.is_running = False
         self.resolved_items = {}
-        # Run initial pipeline on start
-        self.execute_pipeline()
+
+        # Fast start: load from existing canonical outputs if available
+        canonical_path = config.outputs_dir / "canonical_output.json"
+        clarifs_path = config.outputs_dir / "clarifications.json"
+        if canonical_path.exists() and clarifs_path.exists():
+            try:
+                with open(canonical_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self.bundle = CanonicalOutputBundle.from_dict(data)
+                with open(clarifs_path, "r", encoding="utf-8") as f:
+                    c_data = json.load(f)
+                self.clarifications = [ClarificationItem(**c) for c in c_data]
+                self.audit_report = CanonicalAuditor.audit_canonical_bundle(self.bundle, run_semantic_check=False)
+            except Exception as e:
+                self.execute_pipeline()
+
+        else:
+            self.execute_pipeline()
 
     def execute_pipeline(self):
         self.is_running = True
+
         try:
             advisors = read_advisor_roster(config.sources_dir / "advisor_roster.csv")
             custodian = read_custodian_positions(config.sources_dir / "custodian_positions.xlsx")

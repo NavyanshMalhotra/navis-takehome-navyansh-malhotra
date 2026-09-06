@@ -2623,7 +2623,7 @@
       "household_id": "HH-THOMPSON",
       "first_name": "Sarah",
       "last_name": "Thompson",
-      "role": "PRIMARY",
+      "role": "SPOUSE",
       "source_tags": [
         "Risk Profile: Aggressive",
         "Fee Schedule: 1.10%",
@@ -2643,10 +2643,10 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Sarah Thompson 4333491d3e3d9970dcc44a35f46ac83f.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Sarah Thompson",
-          "method": "DEFAULT_PRIMARY",
-          "confidence": 0.9,
+          "method": "LLM_DOC_MINING",
+          "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Primary contact for household"
+          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
       }
     },
@@ -4273,7 +4273,7 @@
           "method": "LLM_AGENT_DISAMBIGUATION",
           "confidence": 0.9,
           "rule_or_agent": "ENTITY_RESOLVER_AGENT",
-          "reasoning": "Account holder 'G. Whitfield' matches CRM client 'George Whitfield' based on initial + surname resolution principle. There is only one client with the surname 'Whitfield' in the CRM, and their first name 'George' starts with 'G'."
+          "reasoning": "The custodian account holder 'G. Whitfield' exactly matches the surname 'Whitfield' and the initial 'G' of the known client 'George Whitfield'. This is a direct application of the 'Initials & Diminutives / Nicknames' principle. The source account type 'Individual' is consistent with mapping to a single natural person."
         },
         "market_value_usd": {
           "source_file": "nevis-fde-hometask/sources/custodian_positions.xlsx",
@@ -6249,10 +6249,10 @@
           "source_file": "nevis-fde-hometask/sources/notion_export/Meetings 2b26fa77d1142f88db92d6b69dc697fd.csv",
           "source_location": "Row 2",
           "source_raw_value": "Robert Chen",
-          "method": "ALIAS_RESOLVER",
-          "confidence": 0.98,
+          "method": "CLIENT_HOUSEHOLD_FK",
+          "confidence": 1.0,
           "rule_or_agent": "INTERACTION_HOUSEHOLD_RESOLVER",
-          "reasoning": "Resolved 'Robert Chen' -> 'Robert Chen' -> Household HH-CHEN"
+          "reasoning": "Direct link to household HH-CHEN"
         }
       }
     },
