@@ -37,7 +37,7 @@ class LLMClient:
             try:
                 from google import genai
                 from google.genai import types
-                http_opts = types.HttpOptions(timeout=15000)
+                http_opts = types.HttpOptions(timeout=60000)
 
                 if config.gemini_api_key.startswith("AQ."):
                     self._client = genai.Client(

@@ -1,0 +1,443 @@
+[
+  {
+    "name": "agent.KnowledgeMiningAgent",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "b32d1068fc7a3403"
+    },
+    "start_time_unix_nano": 1788733568840708000,
+    "end_time_unix_nano": 1788733568842057000,
+    "duration_ms": 1.35,
+    "attributes": {
+      "agent.name": "KnowledgeMiningAgent",
+      "action": "load_rules",
+      "agent.status": "SUCCESS",
+      "agent.duration_ms": 1.37
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "a0d8977f684666e9"
+    },
+    "start_time_unix_nano": 1788733568842159000,
+    "end_time_unix_nano": 1788733572730571000,
+    "duration_ms": 3888.41,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "1",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 3888.4
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "cfd9a7962a948a07"
+    },
+    "start_time_unix_nano": 1788733572730738000,
+    "end_time_unix_nano": 1788733576301189000,
+    "duration_ms": 3570.45,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "2",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 3570.48
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "64fb0f5633d84d6c"
+    },
+    "start_time_unix_nano": 1788733576301381000,
+    "end_time_unix_nano": 1788733579373656000,
+    "duration_ms": 3072.28,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "3",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 3072.33
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "42ed027566561865"
+    },
+    "start_time_unix_nano": 1788733579373904000,
+    "end_time_unix_nano": 1788733584595302000,
+    "duration_ms": 5221.4,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "4",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 5221.45
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "8584cb5d788b0b5c"
+    },
+    "start_time_unix_nano": 1788733584595652000,
+    "end_time_unix_nano": 1788733586816963000,
+    "duration_ms": 2221.31,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "5",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 2221.42
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "2f4bb9a64e4980f6"
+    },
+    "start_time_unix_nano": 1788733586817309000,
+    "end_time_unix_nano": 1788733589613133000,
+    "duration_ms": 2795.82,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "6",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 2795.91
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "656cb379c4eb3ac7"
+    },
+    "start_time_unix_nano": 1788733589613493000,
+    "end_time_unix_nano": 1788733592684975000,
+    "duration_ms": 3071.48,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "7",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 3071.58
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "b7aa1f9f40d33384"
+    },
+    "start_time_unix_nano": 1788733592685321000,
+    "end_time_unix_nano": 1788733604263398000,
+    "duration_ms": 11578.08,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "8",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 11578.2
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "c3631e7ebeae1b13"
+    },
+    "start_time_unix_nano": 1788733604263628000,
+    "end_time_unix_nano": 1788733607502026000,
+    "duration_ms": 3238.4,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "9",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 3238.44
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "c8f467a735481480"
+    },
+    "start_time_unix_nano": 1788733607502304000,
+    "end_time_unix_nano": 1788733615724100000,
+    "duration_ms": 8221.8,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "10",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 8221.85
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "2889004ddcc36073"
+    },
+    "start_time_unix_nano": 1788733615724446000,
+    "end_time_unix_nano": 1788733618900706000,
+    "duration_ms": 3176.26,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "11",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 3176.35
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_client_batch",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "36d49de6fcb684be"
+    },
+    "start_time_unix_nano": 1788733618901059000,
+    "end_time_unix_nano": 1788733621367055000,
+    "duration_ms": 2466.0,
+    "attributes": {
+      "tool.name": "llm_mine_client_batch",
+      "batch_index": "12",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 2466.11
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "agent.DossierMinerAgent",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "ce6384a3b19da9ae"
+    },
+    "start_time_unix_nano": 1788733568842103000,
+    "end_time_unix_nano": 1788733621367149000,
+    "duration_ms": 52525.05,
+    "attributes": {
+      "agent.name": "DossierMinerAgent",
+      "task": "mine_client_notes",
+      "agent.status": "SUCCESS",
+      "agent.duration_ms": 52525.05
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_mine_meeting_notes",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "b9e814c46ad674d1"
+    },
+    "start_time_unix_nano": 1788733621367394000,
+    "end_time_unix_nano": 1788733626785572000,
+    "duration_ms": 5418.18,
+    "attributes": {
+      "tool.name": "llm_mine_meeting_notes",
+      "count": "18",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 5418.16
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "agent.DossierMinerAgent",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "e5b67b6d28073200"
+    },
+    "start_time_unix_nano": 1788733621367264000,
+    "end_time_unix_nano": 1788733626785905000,
+    "duration_ms": 5418.64,
+    "attributes": {
+      "agent.name": "DossierMinerAgent",
+      "task": "mine_meeting_notes",
+      "agent.status": "SUCCESS",
+      "agent.duration_ms": 5418.69
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_onomastic_reasoning",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "9e9a8cbeb5a5a37c"
+    },
+    "start_time_unix_nano": 1788733626794783000,
+    "end_time_unix_nano": 1788733628216558000,
+    "duration_ms": 1421.78,
+    "attributes": {
+      "tool.name": "llm_onomastic_reasoning",
+      "candidate": "g.",
+      "target": "george",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 1421.88
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_entity_disambiguation",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "b1c76720e581de05"
+    },
+    "start_time_unix_nano": 1788733628217417000,
+    "end_time_unix_nano": 1788733634465689000,
+    "duration_ms": 6248.27,
+    "attributes": {
+      "tool.name": "llm_entity_disambiguation",
+      "holder": "Carlos Vasquez",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 6248.32
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_entity_disambiguation",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "7af6f9f97622f96b"
+    },
+    "start_time_unix_nano": 1788733634467941000,
+    "end_time_unix_nano": 1788733635435770000,
+    "duration_ms": 967.83,
+    "attributes": {
+      "tool.name": "llm_entity_disambiguation",
+      "holder": "Priyanka Mehta",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 967.88
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "agent.CanonicalTransformerAgent",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "bf10dc7bbc6eb090"
+    },
+    "start_time_unix_nano": 1788733568842086000,
+    "end_time_unix_nano": 1788733635442253000,
+    "duration_ms": 66600.17,
+    "attributes": {
+      "agent.name": "CanonicalTransformerAgent",
+      "task": "transform_all",
+      "agent.status": "SUCCESS",
+      "agent.duration_ms": 66600.17
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_semantic_plausibility",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "5c02cdf01d3f77be"
+    },
+    "start_time_unix_nano": 1788733635443375000,
+    "end_time_unix_nano": 1788733637638255000,
+    "duration_ms": 2194.88,
+    "attributes": {
+      "tool.name": "llm_semantic_plausibility",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 2194.93
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "agent.AuditorReflectionAgent",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "de17c521f6953246"
+    },
+    "start_time_unix_nano": 1788733635442557000,
+    "end_time_unix_nano": 1788733637638310000,
+    "duration_ms": 2195.75,
+    "attributes": {
+      "agent.name": "AuditorReflectionAgent",
+      "task": "audit_canonical_bundle",
+      "agent.status": "SUCCESS",
+      "agent.duration_ms": 2195.78
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "agent.AuditorReflectionAgent",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "bc6a4f555677c6c5"
+    },
+    "start_time_unix_nano": 1788733635442471000,
+    "end_time_unix_nano": 1788733637638338000,
+    "duration_ms": 2195.87,
+    "attributes": {
+      "agent.name": "AuditorReflectionAgent",
+      "task": "audit_and_reflect",
+      "agent.status": "SUCCESS",
+      "agent.duration_ms": 2195.98
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "agent.ClarificationAgent",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "f512b0ad0f321951"
+    },
+    "start_time_unix_nano": 1788733637638456000,
+    "end_time_unix_nano": 1788733637655196000,
+    "duration_ms": 16.74,
+    "attributes": {
+      "agent.name": "ClarificationAgent",
+      "task": "write_canonical_json",
+      "agent.status": "SUCCESS",
+      "agent.duration_ms": 16.8
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "tool.llm_draft_clarifications",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "98b6e728ba720be4"
+    },
+    "start_time_unix_nano": 1788733637656634000,
+    "end_time_unix_nano": 1788733644552108000,
+    "duration_ms": 6895.47,
+    "attributes": {
+      "tool.name": "llm_draft_clarifications",
+      "tool.status": "SUCCESS",
+      "tool.duration_ms": 6895.47
+    },
+    "status": "UNSET"
+  },
+  {
+    "name": "agent.ClarificationAgent",
+    "context": {
+      "trace_id": "e59843633acdd47a982193999dec355b",
+      "span_id": "f4ea87ea231d2744"
+    },
+    "start_time_unix_nano": 1788733637655384000,
+    "end_time_unix_nano": 1788733644553531000,
+    "duration_ms": 6898.15,
+    "attributes": {
+      "agent.name": "ClarificationAgent",
+      "task": "write_clarifications_markdown",
+      "agent.status": "SUCCESS",
+      "agent.duration_ms": 6898.18
+    },
+    "status": "UNSET"
+  }
+]

@@ -59,26 +59,32 @@ class DossierMinerAgent(BaseAgent):
             if not notes_to_mine or not llm_client.is_available:
                 return extracted
 
-            batch_size = 15
+            batch_size = 5
             for i in range(0, len(notes_to_mine), batch_size):
                 chunk = notes_to_mine[i : i + batch_size]
                 batch_prompt = (
-                    "Analyze the following client CRM dossier notes. For each client, extract:\n"
-                    "- spouse_of: Full name of spouse if indicated\n"
-                    "- role: Canonical role if implied ('PRIMARY', 'SPOUSE', 'SIGNER', 'TRUSTEE', 'DEPENDENT')\n"
-                    "- household_hint: Likely household name if specified\n"
-                    "- holds_joint_account: boolean\n"
-                    "- foreign_currency_hint: Currency code if foreign holdings mentioned\n"
-                    "- acquisition_notes: Mentions of acquisition or prior firm lineage\n"
-                    "- advisor_notes: Notes on advisor assignment\n"
-                    "- affiliated_entities: List of legal entities or LLCs\n"
-                    "- ops_flag: Any operational warning\n"
-                    "- raw_snippets: List of exact quoted sentences supporting extractions\n\n"
+                    "For each client CRM dossier below, extract structured insights into JSON strictly matching this schema:\n"
+                    "{\n"
+                    "  \"clients\": {\n"
+                    "    \"<Exact Client Name>\": {\n"
+                    "      \"spouse_of\": null or \"Full Name of Spouse\",\n"
+                    "      \"role\": \"PRIMARY\" or \"SPOUSE\" or \"SIGNER\" or \"DEPENDENT\",\n"
+                    "      \"household_hint\": null or \"Household Name\",\n"
+                    "      \"holds_joint_account\": true or false,\n"
+                    "      \"foreign_currency_hint\": null or \"Currency Code\",\n"
+                    "      \"acquisition_notes\": null or \"Notes\",\n"
+                    "      \"advisor_notes\": null or \"Notes\",\n"
+                    "      \"affiliated_entities\": [],\n"
+                    "      \"ops_flag\": null or \"Warning\",\n"
+                    "      \"raw_snippets\": [\"exact quotes\"]\n"
+                    "    }\n"
+                    "  }\n"
+                    "}\n\n"
                     "Input Client Notes:\n"
                 )
                 for item in chunk:
                     batch_prompt += f"\n--- Client: {item['name']} (File: {item['file']}) ---\n{item['body']}\n"
-                batch_prompt += "\nOutput a JSON object with key 'clients' mapping client names to their extracted insight dictionary."
+                batch_prompt += "\nOutput valid JSON only."
 
                 try:
                     with telemetry.trace_tool("llm_mine_client_batch", batch_index=(i // batch_size) + 1):
@@ -153,17 +159,23 @@ class DossierMinerAgent(BaseAgent):
                 return extracted
 
             batch_prompt = (
-                "Analyze the following meeting notes. For each meeting, extract:\n"
-                "- client_alias: Canonical client name if meeting uses an alias/nickname\n"
-                "- is_unentered_lead: boolean\n"
-                "- is_churn_discussion: boolean\n"
-                "- entity_notes: Notes on legal entity structuring\n"
-                "- raw_snippets: List of exact quoted sentences supporting extractions\n\n"
+                "For each meeting note below, extract structured insights into JSON strictly matching this schema:\n"
+                "{\n"
+                "  \"meetings\": {\n"
+                "    \"<Exact Meeting Name>\": {\n"
+                "      \"client_alias\": null or \"Canonical Client Name\",\n"
+                "      \"is_unentered_lead\": true or false,\n"
+                "      \"is_churn_discussion\": true or false,\n"
+                "      \"entity_notes\": null or \"Notes\",\n"
+                "      \"raw_snippets\": [\"exact quotes\"]\n"
+                "    }\n"
+                "  }\n"
+                "}\n\n"
                 "Input Meetings:\n"
             )
             for item in meetings_to_mine:
                 batch_prompt += f"\n--- Meeting: {item['name']} (Client: {item['client_field']}) ---\n{item['body']}\n"
-            batch_prompt += "\nOutput a JSON object with key 'meetings' mapping meeting names to their extracted insights."
+            batch_prompt += "\nOutput valid JSON only."
 
             try:
                 with telemetry.trace_tool("llm_mine_meeting_notes", count=len(meetings_to_mine)):

@@ -342,7 +342,7 @@ class CanonicalTransformerAgent(BaseAgent):
                             method="RULE_ENGINE" if status_rule else "DETERMINISTIC_DIRECT",
                             confidence=1.0,
                             rule_or_agent=status_rule.rule_id if status_rule else "STATUS_NORMALIZATION",
-                            reasoning="Dana clarified Legacy means Harborline active book" if status_rule else "Standard status mapping"
+                            reasoning=status_rule.description if status_rule else "Standard status mapping"
                         )
                     }
                 )

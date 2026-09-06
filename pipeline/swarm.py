@@ -95,6 +95,12 @@ class NevisSwarmOrchestrator(BaseAgent):
                 self.clarification_agent.write_clarifications_markdown(
                     clarifs, config.outputs_dir / "clarifications_round2.md"
                 )
+                try:
+                    import json
+                    with open(config.outputs_dir / "telemetry_traces.json", "w", encoding="utf-8") as tf:
+                        json.dump(telemetry.get_traces(), tf, indent=2)
+                except Exception as exc:
+                    logger.debug("Failed saving telemetry traces: %s", exc)
 
             duration = time.time() - start_time
             telemetry_summary = telemetry.get_summary()

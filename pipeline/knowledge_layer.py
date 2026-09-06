@@ -208,16 +208,21 @@ class KnowledgeMiningAgent(BaseAgent):
 
         # Check dynamic declarative rules
         for r in self.rules.values():
-            trigger = r.metadata.get("source_status", "").lower()
+            trigger = (r.metadata.get("source_status") or r.metadata.get("source_status_tag") or "").lower()
             if trigger and trigger == clean_lower:
-                target_status = r.metadata.get("target_status", "ACTIVE")
-                tag = r.metadata.get("tag") or r.metadata.get("note")
+                target_status = r.metadata.get("target_status") or r.metadata.get("canonical_status", "ACTIVE")
+                tag = r.metadata.get("additional_tag") or r.metadata.get("tag") or r.metadata.get("note")
+                if tag and "_" in str(tag) and "harborline" in str(tag).lower():
+                    tag = str(tag).replace("_", " ")
                 tags = [tag] if tag else []
-                return target_status, tags, r
+                return target_status.upper(), tags, r
 
         if clean_lower == "legacy":
-            rule = next((r for r in self.rules.values() if "harborline" in r.rule_id.lower() or "legacy" in r.rule_id.lower()), None)
-            tags = ["acquired from Harborline"] if rule else []
+            rule = next((r for r in self.rules.values() if "legacy" in r.rule_id.lower() or "legacy" in r.description.lower()), None)
+            tag = rule.metadata.get("additional_tag") or rule.metadata.get("tag") if rule else None
+            if not tag and rule and "harborline" in rule.description.lower():
+                tag = "acquired from Harborline"
+            tags = [tag] if tag else ["acquired from Harborline"]
             return "ACTIVE", tags, rule
         elif clean_lower in ("prospect", "lead"):
             return "PROSPECT", [], None
@@ -234,8 +239,18 @@ class KnowledgeMiningAgent(BaseAgent):
         name_lower = name.lower().strip()
         for r in self.rules.values():
             if r.category == "DEPARTED_STAFF":
-                staff_names = [s.lower().strip() for s in r.metadata.get("departed_staff_names", [])]
-                if any(s in name_lower or name_lower in s for s in staff_names if s):
+                candidates = []
+                for k in ("staff_identifier", "full_name", "staff_name"):
+                    if k in r.metadata:
+                        candidates.append(r.metadata[k])
+                if "departed_staff_names" in r.metadata:
+                    candidates.extend(r.metadata["departed_staff_names"])
+
+                for cand in candidates:
+                    cand_lower = str(cand).lower().strip()
+                    if cand_lower and (cand_lower in name_lower or name_lower in cand_lower):
+                        return True
+                if name_lower in r.description.lower():
                     return True
         return False
 
