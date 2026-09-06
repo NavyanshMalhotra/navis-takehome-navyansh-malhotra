@@ -21,3 +21,6 @@ Thumbs.db
 
 # Databases & local caches
 *.db
+
+# Plans & local notes
+Plans/
