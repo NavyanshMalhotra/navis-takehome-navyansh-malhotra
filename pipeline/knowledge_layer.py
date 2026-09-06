@@ -212,16 +212,20 @@ class KnowledgeMiningAgent(BaseAgent):
             if trigger and trigger == clean_lower:
                 target_status = r.metadata.get("target_status") or r.metadata.get("canonical_status", "ACTIVE")
                 tag = r.metadata.get("additional_tag") or r.metadata.get("tag") or r.metadata.get("note")
-                if tag and "_" in str(tag) and "harborline" in str(tag).lower():
-                    tag = str(tag).replace("_", " ")
+                if tag:
+                    tag = str(tag).replace("_", " ").strip()
                 tags = [tag] if tag else []
                 return target_status.upper(), tags, r
 
         if clean_lower == "legacy":
             rule = next((r for r in self.rules.values() if "legacy" in r.rule_id.lower() or "legacy" in r.description.lower()), None)
-            tag = rule.metadata.get("additional_tag") or rule.metadata.get("tag") if rule else None
-            if not tag and rule and "harborline" in rule.description.lower():
-                tag = "acquired from Harborline"
+            tag = None
+            if rule:
+                tag = rule.metadata.get("additional_tag") or rule.metadata.get("tag")
+                if tag:
+                    tag = str(tag).replace("_", " ").strip()
+                elif "harborline" in rule.description.lower():
+                    tag = "acquired from Harborline"
             tags = [tag] if tag else ["acquired from Harborline"]
             return "ACTIVE", tags, rule
         elif clean_lower in ("prospect", "lead"):
@@ -272,9 +276,14 @@ class KnowledgeMiningAgent(BaseAgent):
 
     def convert_currency_to_usd(self, currency: str, amount: float) -> Tuple[float, float, str]:
         curr = currency.upper().strip() if currency else "USD"
-        rate = config.fx_rates_to_usd.get(curr, 1.0)
+        if curr in config.fx_rates_to_usd:
+            rate = config.fx_rates_to_usd[curr]
+            reasoning = f"Converted {amount:,.2f} {curr} to USD @ {rate:.4f} (benchmark rate)"
+        else:
+            rate = 1.0
+            logger.warning("Unconfigured currency '%s' encountered. Assuming parity 1.0; review recommended.", curr)
+            reasoning = f"Unconfigured currency '{curr}'; assumed parity 1.0 pending rate verification."
         usd_val = round(amount * rate, 2)
-        reasoning = f"Converted {amount:,.2f} {curr} to USD @ {rate:.4f} (Q2 2025 benchmark rate)"
         return usd_val, rate, reasoning
 
 

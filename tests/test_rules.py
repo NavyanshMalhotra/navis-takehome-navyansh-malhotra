@@ -108,7 +108,7 @@ class TestNevisCanonicalRules(unittest.TestCase):
                     self.assertFalse(src_file.startswith("/Users/"), f"Absolute path: {src_file}")
 
     def test_slack_round1_resolutions(self):
-        """Dana's Slack Round 1 answers are encoded and applied."""
+        """Institutional business rules from operations communications are encoded and applied."""
         # Legacy -> ACTIVE with Harborline tag
         legacy_hh = next((h for h in self.bundle.households if "DELGADO" in h.household_id), None)
         self.assertIsNotNone(legacy_hh)

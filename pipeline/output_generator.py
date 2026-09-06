@@ -92,11 +92,11 @@ class ClarificationAgent(BaseAgent):
                 lines = [
                     "# Slack Message — #nevis-onboarding (Round 2 Clarifications)",
                     "",
-                    f"> **To**: Dana Ruiz (Head of Operations, {config.firm_name})  ",
+                    f"> **To**: {config.operations_lead} (Head of Operations, {config.firm_name})  ",
                     "> **From**: Alex / Nevis Onboarding Team  ",
                     "> **Subject**: Round 2 Disambiguation Shortlist — Final Items for Canonical Mapping  ",
                     "",
-                    "Hi Dana — thanks again for the clarifications in Round 1! We encoded all your answers into our system: historical lineages are preserved as active clients, Market Value is locked in as the sole AUM benchmark, multi-currency accounts are converted to USD, duplicate entities are deduplicated, and inactive accounts are tagged accordingly.",
+                    f"Hi {config.operations_lead.split()[0]} — thanks again for the clarifications in Round 1! We encoded all your answers into our system: historical lineages are preserved as active clients, Market Value is locked in as the sole AUM benchmark, multi-currency accounts are converted to USD, duplicate entities are deduplicated, and inactive accounts are tagged accordingly.",
                     "",
                     "We've now run our automated pipeline across your entire book. Out of your full book, **over 90% mapped cleanly and automatically** into the Nevis canonical model.",
                     "",

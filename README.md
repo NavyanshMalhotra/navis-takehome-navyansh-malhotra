@@ -27,7 +27,7 @@ The pipeline degrades gracefully without an API key: deterministic resolution (n
 ## Outputs
 
 1. **`outputs/canonical_output.json`** — Canonical records with field-level `_provenance` (source file, row, method, confidence, reasoning).
-2. **`outputs/clarifications_round2.md`** — Round 2 message to Dana Ruiz. Each item has: Trigger, Evidence, Candidate Options, Proposed Default. Does not re-ask anything settled in Round 1.
+2. **`outputs/clarifications_round2.md`** — Round 2 message to the operations lead. Each item has: Trigger, Evidence, Candidate Options, Proposed Default. Does not re-ask anything settled in Round 1.
 3. **`DESIGN.md`** — Architecture, agent swarm topology, and Slack rules lifecycle.
 
 ---

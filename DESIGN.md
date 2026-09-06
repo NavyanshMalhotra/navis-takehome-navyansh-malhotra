@@ -8,13 +8,13 @@ Coordinated multi-agent swarm built on **Google ADK (`google-adk` 2.8.0)** and t
 
 1. **Google ADK Agent Swarm**: Agents operate as modular nodes (`KnowledgeMiningAgent`, `DossierMinerAgent`, `EntityResolverAgent`, `CanonicalTransformerAgent`, `AuditorReflectionAgent`, `ClarificationAgent`) coordinated by `NevisSwarmOrchestrator`. Each stage emits OpenTelemetry spans capturing latency, model calls, tool executions, and errors.
 
-2. **Reflective Feedback Loop**: The auditor agent (`AuditorReflectionAgent`) does not simply fail on violations; it evaluates candidate anomalies and orchestrates reflective re-routing of unmapped accounts before final artifact generation.
+2. **Reflective Feedback Loop**: The auditor agent (`AuditorReflectionAgent`) does not simply fail on violations; it evaluates candidate anomalies and orchestrates reflective re-routing of unmapped accounts and interactions before final artifact generation.
 
-3. **Confidence Routing**: The entity resolver assigns continuous confidence scores. Records below `confidence_low_threshold` (0.50) route to Dana's Round 2 clarifications. Records with high confidence (≥0.85) commit cleanly into the canonical schema.
+3. **Confidence Routing**: The entity resolver assigns continuous confidence scores. Records below `confidence_low_threshold` (0.50) route to Round 2 clarifications for human operator triage. Records with high confidence (≥0.85) commit cleanly into the canonical schema.
 
 4. **Collision-Proof Household Synthesis**: Distinct clients sharing surnames without explicit family links are disambiguated with client-scoped identifiers, preventing unwanted merging of unrelated households.
 
-5. **Dual-Metric AUM**: Accounts retain custodian balance truth (`market_value_usd = 12400.0`), while household billing metrics enforce Dana's institutional rule: inactive/churned households have `active_aum_usd = 0.0`. Reconciliation and billing accuracy are preserved simultaneously.
+5. **Dual-Metric AUM**: Accounts retain custodian balance truth (`market_value_usd = 12400.0`), while household billing metrics enforce institutional rules: inactive/churned households have `active_aum_usd = 0.0`. Reconciliation and billing accuracy are preserved simultaneously.
 
 6. **Offline Robustness**: When running without an API key, the swarm leverages deterministic fallbacks (including an onomastic diminutive dictionary for standard nicknames like Bill $\rightarrow$ William) to maintain pipeline execution.
 

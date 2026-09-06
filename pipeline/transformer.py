@@ -333,7 +333,7 @@ class CanonicalTransformerAgent(BaseAgent):
                             method="ROSTER_LOOKUP" if matched_advisor else "FLAGGED_UNASSIGNED",
                             confidence=1.0 if matched_advisor else 0.40,
                             rule_or_agent="RULE_ADVISOR_PRECEDENCE",
-                            reasoning=f"Matched advisor '{raw_advisor}' to roster ID {advisor_id}" if matched_advisor else "Blank advisor flagged per Dana Ruiz"
+                            reasoning=f"Matched advisor '{raw_advisor}' to roster ID {advisor_id}" if matched_advisor else "Blank advisor flagged per business rules"
                         ),
                         "status": FieldProvenance(
                             source_file=source_file,
@@ -414,7 +414,7 @@ class CanonicalTransformerAgent(BaseAgent):
             raw_mv = r.get("Market_Value", "").strip()
             currency = r.get("Currency", "USD").strip()
             as_of = r.get("As_Of_Date", "2025-06-30").strip()
-            custodian = r.get("Custodian", "Schwab").strip()
+            custodian = r.get("Custodian", "").strip() or "UNKNOWN"
             source_file = self._clean_source_path(r.get("_source_file", "sources/custodian_positions.xlsx"))
             source_row = r.get("_source_row", "")
 
@@ -437,7 +437,7 @@ class CanonicalTransformerAgent(BaseAgent):
                         f"Link to an existing client under a different legal name/entity.",
                         f"Account is closed, winding down, or belongs to another firm."
                     ],
-                    proposed_default=f"Stage account under holding queue; request Dana confirm client identity or create Household '{holder.split()[-1]} Household'.",
+                    proposed_default=f"Stage account under holding queue; request operations confirm client identity or create Household '{holder.split()[-1]} Household'.",
                     confidence=res.confidence,
                     entity_ref=acc_num
                 ))
@@ -545,7 +545,7 @@ class CanonicalTransformerAgent(BaseAgent):
                         "Prospecting lead never converted; archive interaction in prospect lake.",
                         "Typo/alias for an existing household."
                     ],
-                    proposed_default="Archive interaction to prospect review queue without minting household pending Dana's confirmation.",
+                    proposed_default="Archive interaction to prospect review queue without minting household pending operations confirmation.",
                     confidence=0.20,
                     entity_ref=meet_name
                 ))

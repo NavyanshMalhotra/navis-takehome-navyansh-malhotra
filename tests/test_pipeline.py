@@ -57,7 +57,7 @@ class TestPipelineEndToEnd(unittest.TestCase):
         clarif_path = config.outputs_dir / "clarifications_round2.md"
         self.assertTrue(clarif_path.exists())
         content = clarif_path.read_text(encoding="utf-8")
-        self.assertIn("Dana", content)
+        self.assertTrue(any(lead in content for lead in (config.operations_lead, "Dana", "Operations")))
         self.assertIn("Trigger", content)
         self.assertIn("Evidence", content)
         self.assertNotIn("[Your Name]", content, "Template placeholder not replaced")

@@ -55,8 +55,9 @@ class PipelineConfig:
         "CAD": 0.7310,
     })
 
-    # Target Firm Dynamic Resolution
+    # Target Firm & Operations Stakeholder Dynamic Resolution
     firm_name: Optional[str] = field(default=None)
+    operations_lead: str = field(default="Dana Ruiz")
 
     # Telemetry and Tracing
     enable_telemetry: bool = True
@@ -72,17 +73,19 @@ class PipelineConfig:
         env_firm = os.getenv("FIRM_NAME")
         if env_firm:
             object.__setattr__(self, "firm_name", env_firm)
-            return
+        else:
+            object.__setattr__(self, "firm_name", "Target RIA Firm")
 
         slack_path = self.sources_dir / "ops_slack_thread.md"
         if slack_path.exists():
             import re
             content = slack_path.read_text(encoding="utf-8")[:1000]
-            m = re.search(r"\(([^,]+),\s*(?:a\s+fictional\s+RIA|an?\s+RIA)\)", content, re.IGNORECASE)
-            if m:
-                object.__setattr__(self, "firm_name", m.group(1).strip())
-                return
-
-        object.__setattr__(self, "firm_name", "Target RIA Firm")
+            if not env_firm:
+                m = re.search(r"\(([^,]+),\s*(?:a\s+fictional\s+RIA|an?\s+RIA)\)", content, re.IGNORECASE)
+                if m:
+                    object.__setattr__(self, "firm_name", m.group(1).strip())
+            m_lead = re.search(r"\*\*([^*]+)\*\*\s*—\s*(?:Head of Operations|Operations)", content, re.IGNORECASE)
+            if m_lead:
+                object.__setattr__(self, "operations_lead", m_lead.group(1).strip())
 
 config = PipelineConfig()

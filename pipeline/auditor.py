@@ -225,14 +225,14 @@ class AuditorReflectionAgent(BaseAgent):
             if report.is_valid:
                 return report, bundle, clarifications
 
-            # Reflective remediation: identify and re-route orphan accounts if any
+            # Reflective remediation: identify and re-route orphan accounts or interactions if any
             household_ids = {h.household_id for h in bundle.households}
             valid_accounts = []
-            remediated_orphans = []
+            remediated_acc_orphans = []
 
             for acc in bundle.accounts:
                 if not acc.household_id or acc.household_id not in household_ids:
-                    remediated_orphans.append(acc)
+                    remediated_acc_orphans.append(acc)
                     clarif_id = f"CLARIF-ACC-{acc.account_id}"
                     clarifications.append(ClarificationItem(
                         id=clarif_id,
@@ -248,9 +248,34 @@ class AuditorReflectionAgent(BaseAgent):
                 else:
                     valid_accounts.append(acc)
 
-            if remediated_orphans:
-                logger.info("Auditor reflective cycle re-routed %d orphan accounts to clarifications.", len(remediated_orphans))
+            valid_interactions = []
+            remediated_int_orphans = []
+            for item in bundle.interactions:
+                if not item.household_id or item.household_id not in household_ids:
+                    remediated_int_orphans.append(item)
+                    clarif_id = f"CLARIF-INT-{item.interaction_id}"
+                    clarifications.append(ClarificationItem(
+                        id=clarif_id,
+                        category="ORPHAN_INTERACTION",
+                        title=f"Unmapped Interaction — {item.interaction_id}",
+                        trigger=f"Interaction {item.interaction_id} has invalid household FK. Re-routed to clarifications via reflective audit.",
+                        evidence=f"Type={item.interaction_type}, Date={item.interaction_date}, Attendee={item.attendee_raw}.",
+                        candidate_options=["Link to valid household", "Archive interaction to prospect queue"],
+                        proposed_default="Stage interaction for operator review.",
+                        confidence=0.10,
+                        entity_ref=item.interaction_id
+                    ))
+                else:
+                    valid_interactions.append(item)
+
+            if remediated_acc_orphans:
+                logger.info("Auditor reflective cycle re-routed %d orphan accounts to clarifications.", len(remediated_acc_orphans))
                 bundle.accounts = valid_accounts
+            if remediated_int_orphans:
+                logger.info("Auditor reflective cycle re-routed %d orphan interactions to clarifications.", len(remediated_int_orphans))
+                bundle.interactions = valid_interactions
+
+            if remediated_acc_orphans or remediated_int_orphans:
                 report = self.audit_canonical_bundle(bundle, run_semantic_check=False)
 
             return report, bundle, clarifications

@@ -78,7 +78,7 @@
       "Link to an existing client under a different legal name/entity.",
       "Account is closed, winding down, or belongs to another firm."
     ],
-    "proposed_default": "Stage account under holding queue; request Dana confirm client identity or create Household 'Vasquez Household'.",
+    "proposed_default": "Stage account under holding queue; request operations confirm client identity or create Household 'Vasquez Household'.",
     "confidence": 0.2,
     "status": "PENDING_REVIEW",
     "entity_ref": "CU-5010",
@@ -95,7 +95,7 @@
       "Link to an existing client under a different legal name/entity.",
       "Account is closed, winding down, or belongs to another firm."
     ],
-    "proposed_default": "Stage account under holding queue; request Dana confirm client identity or create Household 'Mehta Household'.",
+    "proposed_default": "Stage account under holding queue; request operations confirm client identity or create Household 'Mehta Household'.",
     "confidence": 0.2,
     "status": "PENDING_REVIEW",
     "entity_ref": "CU-6025",
@@ -112,7 +112,7 @@
       "Prospecting lead never converted; archive interaction in prospect lake.",
       "Typo/alias for an existing household."
     ],
-    "proposed_default": "Archive interaction to prospect review queue without minting household pending Dana's confirmation.",
+    "proposed_default": "Archive interaction to prospect review queue without minting household pending operations confirmation.",
     "confidence": 0.2,
     "status": "PENDING_REVIEW",
     "entity_ref": "Intro Call — Redwood Capital",

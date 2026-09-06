@@ -135,7 +135,7 @@
           "method": "FLAGGED_UNASSIGNED",
           "confidence": 0.4,
           "rule_or_agent": "RULE_ADVISOR_PRECEDENCE",
-          "reasoning": "Blank advisor flagged per Dana Ruiz"
+          "reasoning": "Blank advisor flagged per business rules"
         },
         "status": {
           "source_file": "nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7.csv",
@@ -180,7 +180,7 @@
           "method": "FLAGGED_UNASSIGNED",
           "confidence": 0.4,
           "rule_or_agent": "RULE_ADVISOR_PRECEDENCE",
-          "reasoning": "Blank advisor flagged per Dana Ruiz"
+          "reasoning": "Blank advisor flagged per business rules"
         },
         "status": {
           "source_file": "nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7.csv",
@@ -1302,7 +1302,7 @@
           "method": "FLAGGED_UNASSIGNED",
           "confidence": 0.4,
           "rule_or_agent": "RULE_ADVISOR_PRECEDENCE",
-          "reasoning": "Blank advisor flagged per Dana Ruiz"
+          "reasoning": "Blank advisor flagged per business rules"
         },
         "status": {
           "source_file": "nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7.csv",
@@ -1347,7 +1347,7 @@
           "method": "FLAGGED_UNASSIGNED",
           "confidence": 0.4,
           "rule_or_agent": "RULE_ADVISOR_PRECEDENCE",
-          "reasoning": "Blank advisor flagged per Dana Ruiz"
+          "reasoning": "Blank advisor flagged per business rules"
         },
         "status": {
           "source_file": "nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7.csv",
@@ -2709,8 +2709,8 @@
           "source_file": "/Users/navyansh/Desktop/Development/Nevis take home/navis-takehome-navyansh-malhotra/nevis-fde-hometask/sources/notion_export/Clients 484b3fe4ea9195d2052e7bc37063ffc7/Sarah Thompson 4333491d3e3d9970dcc44a35f46ac83f.md",
           "source_location": "Page Body / Row",
           "source_raw_value": "Sarah Thompson",
-          "method": "DEFAULT_PRIMARY",
-          "confidence": 0.9,
+          "method": "LLM_DOC_MINING",
+          "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
           "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
@@ -3207,7 +3207,7 @@
           "method": "LLM_DOC_MINING",
           "confidence": 0.98,
           "rule_or_agent": "ROLE_ASSIGNMENT",
-          "reasoning": "Identified as spouse/wife of 'Megan Sullivan' from Notion page body"
+          "reasoning": "Derived from Notion notes: role is 'SPOUSE'"
         }
       }
     },
@@ -4552,7 +4552,7 @@
           "method": "CURRENCY_CONVERSION",
           "confidence": 1.0,
           "rule_or_agent": "RULE_FOREIGN_CURRENCY_USD_REPORTING",
-          "reasoning": "Converted 1,875,000.00 EUR to USD @ 1.0710 (Q2 2025 benchmark rate)"
+          "reasoning": "Converted 1,875,000.00 EUR to USD @ 1.0710 (benchmark rate)"
         }
       }
     },
@@ -5449,7 +5449,7 @@
           "method": "CURRENCY_CONVERSION",
           "confidence": 1.0,
           "rule_or_agent": "RULE_FOREIGN_CURRENCY_USD_REPORTING",
-          "reasoning": "Converted 2,100,000.00 CHF to USD @ 1.1140 (Q2 2025 benchmark rate)"
+          "reasoning": "Converted 2,100,000.00 CHF to USD @ 1.1140 (benchmark rate)"
         }
       }
     },

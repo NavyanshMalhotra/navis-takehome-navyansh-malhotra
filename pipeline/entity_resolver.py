@@ -324,7 +324,11 @@ class EntityResolverAgent(BaseAgent):
                         )
 
         # 8. LLM Disambiguation for Complex Holdings
-        if llm_client.is_available:
+        holder_tokens = set(holder_lower.split())
+        has_token_overlap = any(bool(holder_tokens.intersection(set(c_name.split()))) for c_name in client_by_name)
+        is_entity_type = any(kw in holder_lower for kw in ("llc", "trust", "corp", "inc", "holdings", "ltd", "lp", "fund", "family"))
+
+        if llm_client.is_available and (has_token_overlap or is_entity_type):
             try:
                 candidates = [
                     {"name": c.get("Name"), "household": c.get("household_id"), "segment": c.get("Segment")}
@@ -345,16 +349,18 @@ class EntityResolverAgent(BaseAgent):
                 matched_client = client_by_name.get(matched_name.lower()) if matched_name else None
 
                 if matched_client and not llm_resp.get("is_orphan"):
-                    return EntityResolutionResult(
-                        account_number=acc_num,
-                        raw_holder=holder,
-                        matched_household_id=matched_client.get("household_id"),
-                        matched_client_id=matched_client.get("client_id"),
-                        resolved_account_type=self._normalize_account_type(llm_resp.get("account_type", source_acc_type)),
-                        confidence=float(llm_resp.get("confidence", 0.88)),
-                        resolution_method="LLM_AGENT_DISAMBIGUATION",
-                        reasoning=llm_resp.get("reasoning", f"LLM resolved '{holder}' to '{matched_name}'.")
-                    )
+                    confidence_val = float(llm_resp.get("confidence", 0.0))
+                    if confidence_val >= config.confidence_high_threshold:
+                        return EntityResolutionResult(
+                            account_number=acc_num,
+                            raw_holder=holder,
+                            matched_household_id=matched_client.get("household_id"),
+                            matched_client_id=matched_client.get("client_id"),
+                            resolved_account_type=self._normalize_account_type(llm_resp.get("account_type", source_acc_type)),
+                            confidence=confidence_val,
+                            resolution_method="LLM_AGENT_DISAMBIGUATION",
+                            reasoning=llm_resp.get("reasoning", f"LLM resolved '{holder}' to '{matched_name}'.")
+                        )
             except Exception as exc:
                 logger.debug("LLM entity disambiguation skipped for %s: %s", holder, exc)
 
