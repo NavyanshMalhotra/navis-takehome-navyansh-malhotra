@@ -149,9 +149,8 @@ Institutional rules are extracted from `ops_slack_thread.md` via thread-segmente
 ### 10.2 Cloud Deployment Architecture
 * **Serverless Containerization**: Package pipeline workers and FastAPI console into OCI-compliant containers deployed to Google Cloud Run or AWS ECS/Fargate.
 * **Workflow Orchestration**: Replace in-process orchestration with Temporal, Google Cloud Workflows, or AWS Step Functions for distributed state persistence, automatic retries, and failure recovery across multi-hour onboarding runs.
-* **Enterprise Security**: Store custodian credentials and GenAI API keys in GCP Secret Manager / AWS Secrets Manager; enforce IAM role-based least privilege.
 
 ### 10.3 Scalability & Core Updates Needed
 * **Database Migration**: Transition local SQLite (`outputs/knowledge_store.db`) to managed PostgreSQL + `pgvector` (or Google Cloud SQL / Vertex AI Vector Search) to support concurrent multi-tenant onboarding syncs.
-* **Streaming & Partitioned Ingestion**: Upgrade custodian XLSX/CSV ingestion from single-node memory to streaming chunked processing over partitioned object storage (GCS / S3) paired with Celery / Pub/Sub workers to scale to 100,000+ positions.
+* **Streaming & Partitioned Ingestion**: Upgrade custodian XLSX/CSV ingestion from single-node memory to streaming chunked processing over partitioned object storage (GCS / S3).
 * **Enterprise Observability & Eval**: Route OpenTelemetry OTLP spans to Datadog APM or Google Cloud Trace; implement automated LLM-as-a-judge regression evaluation benchmarks to detect schema drift before deployment.
