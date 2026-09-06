@@ -12,14 +12,21 @@ Each rule must have:
 - scope: "CLIENT_SPECIFIC" (specific to this firm/person) or "CROSS_CLIENT_REUSABLE" (general RIA practice).
 - metadata: Key-value configuration parameters needed to execute this rule deterministically in the pipeline.
 
-SPECIFIC REQUIRED COGNITIVE REASONING:
+SPECIFIC REQUIRED COGNITIVE REASONING & METADATA:
 1. Status Legacy: Acquired from Harborline Advisors in 2019 -> map to canonical ACTIVE status with tag "acquired from Harborline".
+   metadata: {"source_status": "Legacy", "canonical_status": "ACTIVE", "source_tags": ["acquired from Harborline"]}
 2. Advisor vs Service Rep: Advisor is relationship owner. Never fallback to Service Rep when Advisor is blank. Flag for human assignment.
+   metadata: {"allow_service_rep_fallback": false, "routing": "CLARIFICATIONS"}
 3. Departed Staff: Anna Novak ("A. Novak"), contractor who left in 2024. Surface records pointing to her for reassignment.
+   metadata: {"departed_staff_names": ["Anna Novak", "A. Novak", "Novak"], "action": "FLAG_FOR_REASSIGNMENT"}
 4. AUM Definition: Firm AUM is strictly Market Value at quarter-end. Ignore Cost Basis.
+   metadata: {"aum_metric": "MARKET_VALUE", "ignore_fields": ["Cost_Basis"]}
 5. Currency: Multi-currency holdings (EUR, CHF) must be converted to USD at benchmark quarter-end FX rates, preserving original currency.
+   metadata: {"reporting_currency": "USD", "preserve_original": true}
 6. Deduplication: Dmitri Petrov has duplicate entries created during import; collapse into single client and household.
+   metadata: {"entity_name": "Dmitri Petrov", "duplicate_variants": ["Dmitri Petrov", "Petrov, Dmitri", "Petrov Dmitri"]}
 7. Churned Client: Thompson left in 2023; status is INACTIVE, do NOT count toward active AUM (active_aum_usd = 0).
+   metadata: {"target_household": "Thompson", "canonical_status": "INACTIVE", "active_aum_usd": 0.0}
 
 Output valid JSON only matching:
 {
@@ -35,3 +42,4 @@ Output valid JSON only matching:
     }
   ]
 }
+

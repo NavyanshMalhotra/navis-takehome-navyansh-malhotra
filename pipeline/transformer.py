@@ -200,14 +200,17 @@ class CanonicalTransformer:
         seen_households: Dict[str, Household] = {}
         processed_client_names: Set[str] = set()
 
-        # Step A: Filter known duplicates (Petrov consolidation)
+        # Step A: Filter known duplicates using declarative deduplication rules
         deduped_raw_clients = []
+        seen_dedup_entities: Set[str] = set()
         for rc in raw_clients:
             name = rc.get("Name", "").strip()
-            if self.ke.is_known_duplicate_petrov(name):
-                # Prefer standard 'Dmitri Petrov' entry
-                if name.lower() == "petrov, dmitri":
+            dedup_rule = self.ke.find_deduplication_rule(name)
+            if dedup_rule:
+                target_entity = dedup_rule.metadata.get("entity_name", name)
+                if target_entity in seen_dedup_entities:
                     continue
+                seen_dedup_entities.add(target_entity)
             deduped_raw_clients.append(rc)
 
         # Step B: Process each client
@@ -272,11 +275,20 @@ class CanonicalTransformer:
                 clarif_id = f"CLARIF-ADV-{hh_slug}"
                 # Get unique active advisors from advisor roster (keyed by advisor_id)
                 unique_advisors = list(advisors_by_id.values())
-                proposed_default = "Marcus Webb (Advisor, Chicago)" if "Marcus" in raw_srep else "Priya Raman (Senior Advisor, San Francisco)"
-                
+
+                # Dynamically determine proposed default advisor from service rep or lead active advisor
+                srep_match = next((a for a in unique_advisors if a.full_name.lower() in raw_srep.lower() or raw_srep.lower() in a.full_name.lower()), None)
+                if srep_match and not self.ke.is_departed_staff(srep_match.full_name):
+                    proposed_default = f"{srep_match.full_name} ({srep_match.role}, {srep_match.office})"
+                elif unique_advisors:
+                    lead_adv = unique_advisors[0]
+                    proposed_default = f"{lead_adv.full_name} ({lead_adv.role}, {lead_adv.office})"
+                else:
+                    proposed_default = "Assign primary advisor"
+
                 evidence_text = f"Notion Client row for '{name}'. Status='{raw_status}'. Service Rep='{raw_srep}'. Page note: '{insights.get('advisor_notes', 'None')}'."
                 if self.ke.is_departed_staff(raw_srep):
-                    evidence_text += f" WARNING: Service Rep '{raw_srep}' is Anna Novak who departed the firm."
+                    evidence_text += f" WARNING: Service Rep '{raw_srep}' is departed staff who left the firm."
 
                 clarifications.append(ClarificationItem(
                     id=clarif_id,
@@ -592,16 +604,15 @@ class CanonicalTransformer:
         return interactions, clarifications
 
     def _parse_prose_date(self, prose_date: str) -> str:
-        """Converts prose dates (e.g. 'June 12, 2025') to ISO YYYY-MM-DD."""
-        months = {
-            "january": "01", "february": "02", "march": "03", "april": "04",
-            "may": "05", "june": "06", "july": "07", "august": "08",
-            "september": "09", "october": "10", "november": "11", "december": "12"
-        }
+        """Converts prose dates (e.g. 'June 12, 2025') to ISO YYYY-MM-DD using standard library."""
+        from datetime import datetime
+        if not prose_date:
+            return ""
         clean = prose_date.replace(",", "").strip()
-        tokens = clean.split()
-        if len(tokens) == 3:
-            m, d, y = tokens[0].lower(), tokens[1], tokens[2]
-            if m in months:
-                return f"{y}-{months[m]}-{int(d):02d}"
+        for fmt in ("%B %d %Y", "%b %d %Y", "%Y-%m-%d", "%m/%d/%Y"):
+            try:
+                dt = datetime.strptime(clean, fmt)
+                return dt.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
         return prose_date

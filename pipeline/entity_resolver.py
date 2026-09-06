@@ -15,21 +15,8 @@ from pipeline.llm_client import llm_client
 
 logger = logging.getLogger(__name__)
 
-# Standard Anglo Diminutive Map (generic; no overfitted client-specific names)
-NICKNAME_MAP = {
-    "bob": "robert",
-    "bobby": "robert",
-    "bill": "william",
-    "billy": "william",
-    "jim": "james",
-    "jimmy": "james",
-    "mike": "michael",
-    "tom": "thomas",
-    "tommy": "thomas",
-    "liz": "elizabeth",
-    "dan": "daniel",
-    "danny": "daniel",
-}
+
+
 
 
 @dataclass
@@ -62,6 +49,7 @@ class EntityResolverAgent:
     def __init__(self):
         prompt_path = config.prompts_dir / "entity_resolution.txt"
         self.system_prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else ""
+        self._alias_cache: Dict[str, bool] = {}
 
     def normalize_name(self, name: str) -> str:
         """Normalizes spacing, punctuation, and casing."""
@@ -101,10 +89,10 @@ class EntityResolverAgent:
 
     def extract_joint_holders(self, text: str) -> List[str]:
         """
-        Detects multiple natural persons in a joint holding.
+        Extracts individual co-holders from joint strings.
         e.g. 'Bob & Linda Chen' -> ['Bob Chen', 'Linda Chen']
         """
-        joint_pattern = re.compile(r"^(.*?)\s+(?:&|and)\s+(.*?)(?:\s+jtwros|\s+joint|\s+wros)?$", re.IGNORECASE)
+        joint_pattern = re.compile(r"^(.*?)\s+(?:&|and)\s+(.*?)(?:\s+(?:jtwros|joint|wros))?$", re.IGNORECASE)
         match = joint_pattern.match(text.strip())
         if match:
             person_a = match.group(1).strip()
@@ -125,9 +113,37 @@ class EntityResolverAgent:
             return match.group(1).strip()
         return None
 
-    def resolve_diminutive(self, first_name: str) -> str:
-        """Looks up canonical Anglo given name from common nickname."""
-        return NICKNAME_MAP.get(first_name.lower().strip(), first_name.lower().strip())
+    def is_diminutive_or_alias(self, candidate_first: str, target_first: str) -> bool:
+        """
+        Uses LLM onomastic reasoning to verify if candidate_first is a diminutive,
+        nickname, or variant of target_first (e.g. Bob for Robert, Bill for William).
+        Results are cached in memory to eliminate duplicate network calls.
+        """
+        c = candidate_first.lower().strip()
+        t = target_first.lower().strip()
+        if not c or not t:
+            return False
+        if c == t:
+            return True
+        cache_key = f"{c}:{t}"
+        if cache_key in self._alias_cache:
+            return self._alias_cache[cache_key]
+
+        prompt = (
+            f"In wealth management entity resolution and onomastics, is '{c.title()}' a standard "
+            f"or recognizable diminutive, nickname, or given name variation of '{t.title()}' "
+            f"(such as Bob for Robert, Bill for William, or Jim for James)?\n"
+            f"Respond with JSON strictly matching: {{\"is_match\": true, \"confidence\": 0.95, \"reasoning\": \"...\"}}"
+        )
+        try:
+            res = llm_client.generate_json("You are an expert onomastics and entity disambiguation specialist.", prompt)
+            is_match = bool(res.get("is_match", False))
+            self._alias_cache[cache_key] = is_match
+            logger.info("LLM alias resolution: '%s' -> '%s' (Match: %s)", c, t, is_match)
+            return is_match
+        except Exception as e:
+            logger.debug("LLM alias resolution error for %s vs %s: %s", c, t, e)
+            return False
 
     def resolve_account_holder(
         self,
@@ -223,10 +239,19 @@ class EntityResolverAgent:
             for jh in joint_holders:
                 jh_norm = self.normalize_name(jh).lower()
                 jh_tokens = jh_norm.split()
-                first_dim = self.resolve_diminutive(jh_tokens[0]) if jh_tokens else jh_norm
-                candidate_full = f"{first_dim} {' '.join(jh_tokens[1:])}".strip() if len(jh_tokens) > 1 else first_dim
 
-                target_client = client_by_name.get(jh_norm) or client_by_name.get(candidate_full)
+                target_client = client_by_name.get(jh_norm)
+                if not target_client and jh_tokens:
+                    first_tok = jh_tokens[0]
+                    last_tok = jh_tokens[-1] if len(jh_tokens) > 1 else ""
+                    for c_name_clean, c_record in client_by_name.items():
+                        c_tokens = c_name_clean.split()
+                        if len(c_tokens) >= 2:
+                            c_first, c_last = c_tokens[0], c_tokens[-1]
+                            if (not last_tok or last_tok == c_last) and self.is_diminutive_or_alias(first_tok, c_first):
+                                target_client = c_record
+                                break
+
                 if target_client:
                     return EntityResolutionResult(
                         account_number=acc_num,
@@ -236,8 +261,9 @@ class EntityResolverAgent:
                         resolved_account_type="JOINT",
                         confidence=0.96,
                         resolution_method="JOINT_ACCOUNT_SPOUSAL_RESOLUTION",
-                        reasoning=f"Joint account holder '{holder}' matched to client '{target_client.get('Name')}' in household."
+                        reasoning=f"Joint account holder '{holder}' matched to client '{target_client.get('Name')}' in household via onomastic alias reasoning."
                     )
+
 
         # 6. Surname Joint / Family Account (e.g. 'Thompson Joint')
         surname_joint_match = re.match(r"^(.*?)\s+(?:joint\s+wros|jtwros|joint|family)$", holder, re.IGNORECASE)
