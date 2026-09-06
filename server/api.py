@@ -40,26 +40,39 @@ class AppState:
         self.audit_report = None
         self.is_running = False
         self.resolved_items: Dict[str, Any] = {}
+        self._last_loaded_mtime = 0.0
+        self.load_from_disk_if_fresh(force=False)
 
-        # Load from existing disk artifacts if available
+    def load_from_disk_if_fresh(self, force: bool = False):
         canonical_path = config.outputs_dir / "canonical_output.json"
         clarifs_path = config.outputs_dir / "clarifications.json"
-        if canonical_path.exists() and clarifs_path.exists():
-            try:
-                with open(canonical_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                self.bundle = CanonicalOutputBundle.from_dict(data)
-                with open(clarifs_path, "r", encoding="utf-8") as f:
-                    c_data = json.load(f)
-                self.clarifications = [ClarificationItem(**c) for c in c_data]
-                self.audit_report = self.orchestrator.auditor_agent.audit_canonical_bundle(
-                    self.bundle, run_semantic_check=False
-                )
-            except Exception as exc:
-                logger.warning("Failed loading cached bundle: %s. Re-running swarm...", exc)
+        if not canonical_path.exists() or not clarifs_path.exists():
+            if force:
                 self.execute_pipeline()
-        else:
-            self.execute_pipeline()
+            return
+
+        current_mtime = canonical_path.stat().st_mtime
+        if not force and current_mtime <= self._last_loaded_mtime:
+            return
+
+        try:
+            with open(canonical_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.bundle = CanonicalOutputBundle.from_dict(data)
+            with open(clarifs_path, "r", encoding="utf-8") as f:
+                c_data = json.load(f)
+            self.clarifications = [ClarificationItem(**c) for c in c_data]
+            self.audit_report = self.orchestrator.auditor_agent.audit_canonical_bundle(
+                self.bundle, run_semantic_check=False
+            )
+            self._last_loaded_mtime = current_mtime
+            for item_id, res in self.resolved_items.items():
+                self._apply_resolution_in_memory(item_id, res)
+            logger.info("Loaded fresh canonical output bundle from disk (mtime: %f)", current_mtime)
+        except Exception as exc:
+            logger.warning("Failed loading cached bundle: %s. Re-running swarm...", exc)
+            if force:
+                self.execute_pipeline()
 
     def execute_pipeline(self):
         self.is_running = True
@@ -105,6 +118,7 @@ class ResolveClarificationRequest(BaseModel):
 
 @app.get("/api/pipeline/status")
 def get_pipeline_status():
+    state.load_from_disk_if_fresh()
     total_mv = sum(h.market_value_usd for h in state.bundle.households if h.market_value_usd is not None) if state.bundle else 0.0
     active_aum = sum(h.active_aum_usd for h in state.bundle.households if h.active_aum_usd is not None) if state.bundle else 0.0
     return {
@@ -134,6 +148,7 @@ def trigger_pipeline(background_tasks: BackgroundTasks):
 
 @app.get("/api/canonical")
 def get_canonical_book(entity_type: Optional[str] = None, search: Optional[str] = None):
+    state.load_from_disk_if_fresh()
     if not state.bundle:
         raise HTTPException(status_code=404, detail="Canonical bundle not initialized.")
     data = state.bundle.to_dict()
